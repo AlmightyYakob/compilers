@@ -1,0 +1,117 @@
+   0  $accept : start $end
+
+   1  start : expr '\n'
+
+   2  expr : expr '+' expr
+   3       | expr '*' expr
+   4       | '(' expr ')'
+   5       | NUM
+
+state 0
+	$accept : . start $end  (0)
+
+	NUM  shift 1
+	'('  shift 2
+	.  error
+
+	start  goto 3
+	expr  goto 4
+
+
+state 1
+	expr : NUM .  (5)
+
+	.  reduce 5
+
+
+state 2
+	expr : '(' . expr ')'  (4)
+
+	NUM  shift 1
+	'('  shift 2
+	.  error
+
+	expr  goto 5
+
+
+state 3
+	$accept : start . $end  (0)
+
+	$end  accept
+
+
+state 4
+	start : expr . '\n'  (1)
+	expr : expr . '+' expr  (2)
+	expr : expr . '*' expr  (3)
+
+	'+'  shift 6
+	'*'  shift 7
+	'\n'  shift 8
+	.  error
+
+
+state 5
+	expr : expr . '+' expr  (2)
+	expr : expr . '*' expr  (3)
+	expr : '(' expr . ')'  (4)
+
+	'+'  shift 6
+	'*'  shift 7
+	')'  shift 9
+	.  error
+
+
+state 6
+	expr : expr '+' . expr  (2)
+
+	NUM  shift 1
+	'('  shift 2
+	.  error
+
+	expr  goto 10
+
+
+state 7
+	expr : expr '*' . expr  (3)
+
+	NUM  shift 1
+	'('  shift 2
+	.  error
+
+	expr  goto 11
+
+
+state 8
+	start : expr '\n' .  (1)
+
+	.  reduce 1
+
+
+state 9
+	expr : '(' expr ')' .  (4)
+
+	.  reduce 4
+
+
+state 10
+	expr : expr . '+' expr  (2)
+	expr : expr '+' expr .  (2)
+	expr : expr . '*' expr  (3)
+
+	'*'  shift 7
+	'+'  reduce 2
+	'\n'  reduce 2
+	')'  reduce 2
+
+
+state 11
+	expr : expr . '+' expr  (2)
+	expr : expr . '*' expr  (3)
+	expr : expr '*' expr .  (3)
+
+	.  reduce 3
+
+
+8 terminals, 3 nonterminals
+6 grammar rules, 12 states
