@@ -7,6 +7,8 @@
 
 #define EOS 256
 
+#define ECHO 0
+
 int get_token();
 tree_t *expr(), *term(), *factor();
 void match(int token);
@@ -17,16 +19,18 @@ int curr_attribute;
 
 
 int main() {
-	tree_t *value;
-	// Init first token
-	curr_token = get_token();
+	while(1){
+		tree_t *value;
+		// Init first token
+		curr_token = get_token();
 
-	// Call parser (start symbol of grammar)
-	value = expr();
-	assert(curr_token == EOS);
+		// Call parser (start symbol of grammar)
+		value = expr();
+		assert(curr_token == EOS);
 
-	// Semantic Eval
-	fprintf(stderr, "Value = %d\n", tree_eval(value));
+		// Semantic Eval
+		fprintf(stderr, "Value = %d\n", tree_eval(value));
+	}
 }
 
 // Syntax analyzer (parser)
@@ -154,24 +158,24 @@ int get_token(){
 			case ' ': case '\t':
 				continue;
 			case '\n':
-				fprintf(stderr, "[EOS] %c", c);
+				if (ECHO) fprintf(stderr, "[EOS] %c", c);
 				return EOS;
 				
 			// Additive operators
 			case '+':
 			case '-':
-				fprintf(stderr, "[ADDOP: %c]", c);
+				if (ECHO) fprintf(stderr, "[ADDOP: %c]", c);
 				return c;
 
 			// Multiplicative operator
 			case '*':
 			case '/':
-				fprintf(stderr, "[MULOP: %c]", c);
+				if (ECHO) fprintf(stderr, "[MULOP: %c]", c);
 				return c;
 			
 			// Process parentheses
 			case '(': case ')':
-				fprintf(stderr, "[%c]", c);
+				if (ECHO) fprintf(stderr, "[%c]", c);
 				return c;
 
 			// Default return character
@@ -188,11 +192,11 @@ int get_token(){
 					// Pass value to channel
 					curr_attribute = value;
 
-					fprintf(stderr, "[NUM: %d]", value);
+					if (ECHO) fprintf(stderr, "[NUM: %d]", value);
 					return NUM;
 				}
 				else{
-					fprintf(stderr, "{%c}", c);
+					if (ECHO) fprintf(stderr, "{%c}", c);
 					return c;
 					// assert(0);
 				}
