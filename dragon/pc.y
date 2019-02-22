@@ -56,7 +56,7 @@ identifier_list
 declarations
     : declarations VAR sub_declarations
     | /* empty */
-    ; /* Need to add support for multiple declarations without VAR keyword after initial VAR keyword */
+    ;
 
 sub_declarations
     : sub_declarations identifier_list ':' type ';'
