@@ -1,7 +1,7 @@
 program fibTest(input, output);   {Sample tvi code here}
 var
         i, done: integer;
-function fib(n:integer) : result integer;
+function fib(n:integer) : integer;
 var
         j, k : integer;
 begin
@@ -11,7 +11,7 @@ begin
                 fib := 1
         else
                 fib := fib(n-1) + fib(n-2)
-end
+end;
 begin
         done := 0;
         while done = 0 do begin

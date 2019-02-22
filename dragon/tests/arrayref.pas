@@ -1,7 +1,7 @@
 
 program arrayRefTest (input, output);
  var a, b : integer;
-     x : array [1..5] of real;
+        x : array [1..5] of real;
 begin
   read(a);
   read(b);

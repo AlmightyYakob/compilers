@@ -23,7 +23,8 @@ extern int yylex();
 %token ARRAY OF
 %token INTEGER REAL
 
-%token IF THEN ELSE WHILE DO
+%token IF THEN ELSE 
+%token WHILE DO
 
 %token ASSIGNOP
 %token RELOP EQ NE LT LE GT GE
@@ -53,7 +54,12 @@ identifier_list
     ;
 
 declarations
-    : declarations VAR identifier_list ':' type ';'
+    : declarations VAR sub_declarations
+    | /* empty */
+    ; /* Need to add support for multiple declarations without VAR keyword after initial VAR keyword */
+
+sub_declarations
+    : sub_declarations identifier_list ':' type ';'
     | /* empty */
     ;
 
@@ -119,6 +125,7 @@ matched_statement
     | variable ASSIGNOP expression
     | procedure_statement
     | compound_statement
+    | WHILE expression DO statement     /* causes shift/reduce conflict */
     ;
 
 unmatched_statement
