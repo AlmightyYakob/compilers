@@ -19,4 +19,4 @@ lex.yy.c: pc.l
 	$(LEX) -l pc.l
 
 clean:
-	rm -f mypc *.o y.tab.* lex.yy.*
+	rm -f mypc *.o y.tab.* lex.yy.* *.output

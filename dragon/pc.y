@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "tree.h"
 #include "y.tab.h"
 
 extern int yyerror(char*);
@@ -27,7 +28,7 @@ extern int yylex();
 %token ASSIGNOP
 %token RELOP EQ NE LT LE GT GE
 %token ADDOP PLUS MINUS OR
-%token MULOP STAR SLASH AND
+%token MULOP STAR SLASH DIV MOD AND
 %token NOT
 
 %token DOTDOT
@@ -37,7 +38,8 @@ extern int yylex();
 
 %%
 
-program: 
+program
+    :
     PROGRAM ID '(' identifier_list ')' ';'
     declarations
     subprogram_declarations
@@ -49,7 +51,6 @@ identifier_list
     : ID
     | identifier_list ',' ID
     ;
-
 
 declarations
     : declarations VAR identifier_list ':' type ';'
@@ -109,11 +110,20 @@ statement_list
     ;
 
 statement
-    : variable ASSIGNOP expression
+    : matched_statement
+    | unmatched_statement
+    ;
+
+matched_statement
+    : IF expression THEN matched_statement ELSE matched_statement
+    | variable ASSIGNOP expression
     | procedure_statement
     | compound_statement
-    | IF expression THEN statement ELSE statement
-    | WHILE expression DO statement
+    ;
+
+unmatched_statement
+    : IF expression THEN statement
+    | IF expression THEN matched_statement ELSE unmatched_statement
     ;
 
 variable
@@ -138,9 +148,10 @@ expression
 
 simple_expression
     : term
-    | sign term         /* issue here, sign should be lower than ADDOP */
+    | sign term
     | simple_expression ADDOP term
     ;
+    /* issue here, sign should be lower than ADDOP */
 
 term
     : factor
@@ -163,3 +174,7 @@ sign
     ;
 
 %%
+
+int main() {
+    yyparse();
+}
