@@ -7,6 +7,9 @@
 
 extern int yyerror(char*);
 extern int yylex();
+
+#define ECHO 1
+
 %}
 
 %union {
@@ -22,6 +25,7 @@ extern int yylex();
 %token PROCEDURE FUNCTION
 %token ARRAY OF
 %token INTEGER REAL
+%token RESULT
 
 %token IF THEN ELSE 
 %token WHILE DO
@@ -46,10 +50,11 @@ program
     subprogram_declarations
     compound_statement
     '.'
+    {}
     ;
 
 identifier_list
-    : ID
+    : ID    { }
     | identifier_list ',' ID
     ;
 
@@ -60,7 +65,7 @@ declarations
 
 sub_declarations
     : sub_declarations identifier_list ':' type ';'
-    | /* empty */
+    | identifier_list ':' type ';'
     ;
 
 type
@@ -87,8 +92,13 @@ subprogram_declaration
     ;
 
 subprogram_head
-    : FUNCTION ID { /* push new scope */  } arguments ':' standard_type ';'
+    : FUNCTION ID { /* push new scope */  } arguments ':' maybe_result standard_type ';'
     | PROCEDURE ID arguments ';'
+    ;
+
+maybe_result
+    : RESULT
+    | /* empty */
     ;
 
 arguments

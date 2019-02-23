@@ -7,6 +7,19 @@
 extern int yyerror (char *);
 void aux_tree_print(tree_t *t, int spaces);
 
+/** 
+ * Tree node types:
+ * 
+ * PROGRAM
+ * SUB_PROGRAM
+ * DECLARATIONS
+ * COMPOUND_STATMENT
+ * VARIABLE
+ * 
+ * 
+ */
+
+
 tree_t *mktree(int type, tree_t *left, tree_t *right){
     tree_t *p = (tree_t *) malloc(sizeof(tree_t));
     assert (p != NULL);

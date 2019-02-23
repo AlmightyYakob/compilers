@@ -35,6 +35,8 @@ comment \{[^{]*\}
 "while"         { fprintf(stderr, "[WHILE]"); return WHILE; }
 "do"            { fprintf(stderr, "[DO]"); return DO; }
 
+"result"        { fprintf(stderr, "[RESULT]"); return RESULT; }
+
 
 ".."            { fprintf(stderr, "[DOTDOT]"); return DOTDOT; }
 
