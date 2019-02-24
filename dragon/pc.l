@@ -46,6 +46,7 @@ comment \{[^{]*\}
 "<="            { fprintf(stderr, "[RELOP: %d]", LE);       yylval.opval = LE; return RELOP; }
 ">"             { fprintf(stderr, "[RELOP: %d]", GT);       yylval.opval = GT; return RELOP; }
 ">="            { fprintf(stderr, "[RELOP: %d]", GE);       yylval.opval = GE; return RELOP; }
+"not"            { fprintf(stderr, "[RELOP: %d]", NOT);       yylval.opval = NOT; return RELOP; }
 
 "+"             { fprintf(stderr, "[ADDOP: %d]", PLUS);     yylval.opval = PLUS;    return ADDOP; }
 "-"             { fprintf(stderr, "[ADDOP: %d]", MINUS);    yylval.opval = MINUS;   return ADDOP; }
