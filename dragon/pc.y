@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-//#include "tree.h"
+#include "tree.h"
 #include "y.tab.h"
 
 extern int yyerror(char*);
@@ -31,15 +31,15 @@ extern int yylex();
 %token WHILE DO
 
 %token ASSIGNOP
-%token RELOP EQ NE LT LE GT GE
-%token ADDOP PLUS MINUS OR
-%token MULOP STAR SLASH DIV MOD AND
+%token <opval> RELOP EQ NE LT LE GT GE
+%token <opval> ADDOP PLUS MINUS OR
+%token <opval> MULOP STAR SLASH DIV MOD AND
 %token NOT
 
 %token DOTDOT
-%token ID 
-%token INUM
-%token RNUM
+%token <sval> ID
+%token <ival> INUM
+%token <rval> RNUM
 
 %%
 
@@ -54,7 +54,7 @@ program
     ;
 
 identifier_list
-    : ID                        { /* return ident with next being NULL */ }
+    : ID                        { /* return ident with next being NULL */ make_identifier($1, NULL); }
     | identifier_list ',' ID    { /* return ident with next being the ident_list*/ }
     ;
 
@@ -90,7 +90,7 @@ subprogram_declaration
     declarations 
     subprogram_declarations 
     compound_statement
-		{ /* pop current scope */  }
+		{ /* pop current scope */ }
     ;
 
 subprogram_head
@@ -181,8 +181,8 @@ factor
     : ID
     | ID '[' expression ']'
     | ID '(' expression_list ')'
-    | INUM
-    | RNUM
+    | INUM { }
+    | RNUM { }
     | '(' expression ')'
     | NOT factor
     ;

@@ -7,17 +7,16 @@
 extern int yyerror (char *);
 void aux_tree_print(tree_t *t, int spaces);
 
-/** 
- * Tree node types:
- * 
- * PROGRAM
- * SUB_PROGRAM
- * DECLARATIONS
- * COMPOUND_STATMENT
- * VARIABLE
- * 
- * 
- */
+
+identifier_node make_identifier(char *name, identifier_node *next){
+	/* malloc ident var with name, and set next to next */
+	printf("###ID = %s###", name);
+}
+
+identifier_list make_identifier_list(identifier_node *start){
+	/* Set start as the start node, and count how many items */
+}
+
 
 
 tree_t *mktree(int type, tree_t *left, tree_t *right){
@@ -46,7 +45,7 @@ int tree_eval(tree_t *t){
         case '/':
             assert(tree_eval(t->right) != 0);
             return tree_eval(t->left) / tree_eval(t->right);
-        case NUM:
+        case INUM:
             return t->attribute;
         default:
             fprintf(stderr, "Tree Eval: unknown type %d\n", t->type);
@@ -74,7 +73,7 @@ void aux_tree_print(tree_t *t, int spaces){
         case '/':
             fprintf(stderr, "[MULOP]");
             break;
-        case NUM:
+        case INUM:
             fprintf(stderr, "[NUM: %d]", t->attribute);
             break;
         

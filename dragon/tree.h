@@ -3,54 +3,64 @@
 
 // Define Node Types
 
+// Statement
 typedef struct statement_s {
 	// Fill in with stuff
 	// union of different types
 	// ex. if then, assign, while, etc. 
 
 	// Pointer to next statement
-	statement *next;
+	struct statement_s *next;
 
-} statement;
+} statement_node;
 
 typedef struct statement_list_s {
 	int numStatements;
-	statement *start;
+	statement_node *start;
 } statement_list;
 
 
+// Identifier
 typedef struct identifier_s {
 	char *ident;
-	identifier *next;
-} identifier;
+	struct identifier_s *next;
+} identifier_node;
 
 typedef struct identifier_list_s {
 	int numIdents;
-	identifier *start;
+	identifier_node *start;
 } identifier_list;
 
 
+// Declaration
 typedef struct declaration_node_s {
 	int type;	// Data type of all variables declared with it
 	identifier_list vars;
 } declaration_node;
 
+typedef struct declaration_list_s {
+	int numDeclarations;
+	declaration_node *start;
+} declaration_list;
+
+
+// Subprogram Declaration
 typedef struct subprogram_declaration_node_s {
 	// Way to differentiate between func and procedure.
 	// Might make 2 different structs for this
 	int type;
 
 	// Function arguments
-	char **vars
+	char **vars;
 
 	// Token that represents return type of function
-	int return_type
+	int return_type;
 
 	// List of declarations
 	declaration_node *declarations;
 
 	// List of subprogram declarations
-	subprogram_declaration_node *subprogram_declarations;
+	struct subprogram_declaration_node_s *subprogram_declarations;
 
 	// Compound statments - just list of statements
 	statement_list statements;
@@ -64,6 +74,7 @@ typedef struct subprogram_declaration_list_s {
 } subprogram_declaration_list;
 
 
+// Program
 typedef struct program_node_s {
 	char *name;
 	identifier_list args;
@@ -79,6 +90,7 @@ typedef struct program_node_s {
 
 
 
+
 typedef struct tree_s {
 	int type; 		/* token type */
 	int attribute; 	/* token attribute*/
@@ -86,6 +98,15 @@ typedef struct tree_s {
 	struct tree_s *left;
 	struct tree_s *right;
 } tree_t;
+
+
+/* Define Constructor Functions */
+
+identifier_node make_identifier(char *name, identifier_node *next);
+identifier_list make_identifier_list(identifier_node *start);
+
+
+
 
 /* Constructor */
 tree_t *mktree(int type, tree_t *left, tree_t *right);
