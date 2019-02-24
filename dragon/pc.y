@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "tree.h"
+//#include "tree.h"
 #include "y.tab.h"
 
 extern int yyerror(char*);
@@ -54,8 +54,8 @@ program
     ;
 
 identifier_list
-    : ID    { }
-    | identifier_list ',' ID
+    : ID                        { /* return ident with next being NULL */ }
+    | identifier_list ',' ID    { /* return ident with next being the ident_list*/ }
     ;
 
 declarations
@@ -65,7 +65,9 @@ declarations
 
 sub_declarations
     : sub_declarations identifier_list ':' type ';'
+        {/* Do below, and add sub_declarations as the next pointer */}
     | identifier_list ':' type ';'
+        {/* $$ = make_decl_node(make_ident_list($1), $3). make_ident_list also counts num of items in list. */}
     ;
 
 type
