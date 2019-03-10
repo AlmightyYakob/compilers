@@ -27,7 +27,7 @@ extern int yylex();
 %token INTEGER REAL
 %token RESULT
 
-%token IF THEN ELSE 
+%token IF THEN ELSE
 %token WHILE DO
 
 %token ASSIGNOP
@@ -55,7 +55,7 @@ program
 
 identifier_list
     : ID                        { /* return ident with next being NULL */ make_identifier($1, NULL); }
-    | identifier_list ',' ID    { /* return ident with next being the ident_list*/ }
+    | identifier_list ',' ID    { /* return ident with next being the ident_list*/ make_identifier($3, $1)}
     ;
 
 declarations
@@ -86,9 +86,9 @@ subprogram_declarations
     ;
 
 subprogram_declaration
-    : subprogram_head 
-    declarations 
-    subprogram_declarations 
+    : subprogram_head
+    declarations
+    subprogram_declarations
     compound_statement
 		{ /* pop current scope */ }
     ;
@@ -186,7 +186,7 @@ factor
     | '(' expression ')'
     | NOT factor
     ;
-    
+
 sign
     : '+'
     | '-'

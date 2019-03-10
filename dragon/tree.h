@@ -1,7 +1,28 @@
 #ifndef TREE_H
 #define TREE_H
 
-// Define Node Types
+#include "symbol_table.h";
+
+/******Define Node Types******/
+
+// Leaf node for basic types
+typedef struct {
+	union Type {
+		char *str;
+		int ival;
+		float rval;
+	}
+
+	// Pointer to value in symbol table
+} leaf_node_t;
+
+typedef struct {
+	int val;
+} int_node_t;
+
+typedef struct {
+	float val;
+} float_node_t;
 
 // Statement
 typedef struct statement_s {
