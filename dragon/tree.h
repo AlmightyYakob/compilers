@@ -24,6 +24,16 @@ typedef struct {
 	float val;
 } float_node_t;
 
+
+// Nodes for basic operations
+typedef struct {
+	int type;
+	// Other stuff
+}
+
+
+
+
 // Statement
 typedef struct statement_s {
 	// Fill in with stuff
