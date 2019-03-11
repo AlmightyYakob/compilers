@@ -146,8 +146,8 @@ unmatched_statement
     ;
 
 variable
-    : ID
-    | ID '[' expression ']'
+    : ID                        {/* return entry in symbol table to be assigned */}
+    | ID '[' expression ']'     {/* Dunno what this is for */}
     ;
 
 procedure_statement
@@ -173,23 +173,23 @@ simple_expression
     /* issue here, sign should be lower than ADDOP */
 
 term
-    : factor
-    | term MULOP factor
+    : factor                {/* Return factor */}
+    | term MULOP factor     {/* Return mktree of * operator, with term and factor */}
     ;
 
 factor
-    : ID
-    | ID '[' expression ']'
-    | ID '(' expression_list ')'
-    | INUM { }
-    | RNUM { }
-    | '(' expression ')'
-    | NOT factor
+    : ID                            {/* return value of ID from symbol table */}
+    | ID '[' expression ']'         {/* This might have to be removed */}
+    | ID '(' expression_list ')'    {/*  */}
+    | INUM                          {/* Return value of INUM */}
+    | RNUM                          {/* Return value of RNUM */}
+    | '(' expression ')'            {/* Pretty much just return expression */}
+    | NOT factor                    {/* Negate whatever the value of factor is */}
     ;
 
 sign
-    : '+'
-    | '-'
+    : '+' {$$ =  1}
+    | '-' {$$ = -1}
     ;
 
 %%
