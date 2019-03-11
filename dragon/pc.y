@@ -41,6 +41,10 @@ extern int yylex();
 %token <ival> INUM
 %token <rval> RNUM
 
+/* Put types here
+    %type <type> program, identifier_list ,etc
+*/
+
 %%
 
 program
