@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "tree.h"
 #include "y.tab.h"
 
@@ -17,6 +18,8 @@ extern int yylex();
     float rval; /* RNUM */
     int opval;  /* RELOP ADDOP MULOP */
     char *sval; /* ID */
+    /*********************************/
+    tree_t *tval;
 }
 
 %token PROGRAM
@@ -31,15 +34,44 @@ extern int yylex();
 %token WHILE DO
 
 %token ASSIGNOP
-%token <opval> RELOP EQ NE LT LE GT GE
-%token <opval> ADDOP PLUS MINUS OR
-%token <opval> MULOP STAR SLASH DIV MOD AND
+%token <opval> RELOP
+%token EQ NE LT LE GT GE
+%token <opval> ADDOP
+%token PLUS MINUS OR
+%token <opval> MULOP
+%token STAR SLASH DIV MOD AND
 %token NOT
 
 %token DOTDOT
 %token <sval> ID
 %token <ival> INUM
 %token <rval> RNUM
+
+%token COMMA
+
+%token ARRAY_ACCESS
+%token FUNCTION_CALL
+%token PROCEDURE_CALL
+
+
+
+
+
+%type <tval> compound_statement;
+%type <tval> optional_statements;
+%type <tval> statement_list;
+%type <tval> statement;
+%type <tval> matched_statement;
+%type <tval> unmatched_statement;
+%type <tval> variable;
+%type <tval> procedure_statement;
+%type <tval> expression_list;
+%type <tval> expression;
+%type <tval> simple_expression;
+%type <tval> term;
+%type <tval> factor;
+
+%type <ival> sign;
 
 %%
 
@@ -54,8 +86,8 @@ program
     ;
 
 identifier_list
-    : ID                        { /* return ident with next being NULL */ make_identifier($1, NULL); }
-    | identifier_list ',' ID    { /* return ident with next being the ident_list*/ make_identifier($3, $1)}
+    : ID                        {/* return ident with next being NULL...make_identifier($1, NULL); */}
+    | identifier_list ',' ID    {/* return ident with next being the ident_list...make_identifier($3, $1) */}
     ;
 
 declarations
@@ -109,22 +141,22 @@ arguments
     ;
 
 parameter_list
-    : identifier_list ':' type
+    : identifier_list ':' type          {}
     | parameter_list ';' identifier_list ':' type
     ;
 
 compound_statement
-    : BBEGIN optional_statements END
+    : BBEGIN optional_statements END    {$$ = $2; /* might need to tag as begin/end block */}
     ;
 
 optional_statements
-    : statement_list
-    | /* empty */
+    : statement_list    {$$ = $1;}
+    | /* empty */       {$$ = NULL;}
     ;
 
 statement_list
-    : statement
-    | statement_list ';' statement
+    : statement                         {$$ = $1; }
+    | statement_list ';' statement      {$$ = mktree(COMMA, $1, $3); }
     ;
 
 statement
@@ -134,62 +166,64 @@ statement
 
 matched_statement
     : IF expression THEN matched_statement ELSE matched_statement
-    | variable ASSIGNOP expression
-    | procedure_statement
-    | compound_statement
-    | WHILE expression DO statement     /* causes shift/reduce conflict */
+        {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
+    | variable ASSIGNOP expression      {$$ = mktree(ASSIGNOP, $1, $3);}
+    | procedure_statement       {$$ = $1;}
+    | compound_statement        {$$ = $1;}
+    | WHILE expression DO statement /* causes shift/reduce conflict */  
+        {$$ = mktree(WHILE, $2, $4); }
     ;
 
 unmatched_statement
-    : IF expression THEN statement
-    | IF expression THEN matched_statement ELSE unmatched_statement
+    : IF expression THEN statement                                      {$$ = mktree(IF, $2, mktree(THEN, $4, NULL));}
+    | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     ;
 
 variable
     : ID                        {/* return entry in symbol table to be assigned */}
-    | ID '[' expression ']'     {/* Dunno what this is for */}
+    | ID '[' expression ']'     {/* Array access*/}
     ;
 
 procedure_statement
-    : ID
-    | ID '(' expression_list ')'
+    : ID                            {$$ = mkid($1);}
+    | ID '(' expression_list ')'    {$$ = mktree(ARRAY_ACCESS, mkid($1), $3);}
     ;
 
 expression_list
-    : expression
-    | expression_list ',' expression
+    : expression                        {$$ = $1;}
+    | expression_list ',' expression    {$$ = mktree(COMMA, $1, $3);}
     ;
 
 expression
-    : simple_expression
-    | simple_expression RELOP simple_expression
+    : simple_expression     {$$ = $1;}
+    | simple_expression RELOP simple_expression {/* mkop with RELOP */}
     ;
 
 simple_expression
-    : term
-    | sign term
-    | simple_expression ADDOP term
+    : term                          {$$ = $1; }
+    | sign term                     {/* mkop with add and null right child */}
+    | simple_expression ADDOP term  {/* mkop with add */}
     ;
     /* issue here, sign should be lower than ADDOP */
 
 term
-    : factor                {/* Return factor */}
-    | term MULOP factor     {/* Return mktree of * operator, with term and factor */}
+    : factor                {/* Return factor */ $$ = $1; }
+    | term MULOP factor     {$$ = mkop(MULOP, $2, $1 ,$3);}
     ;
 
 factor
-    : ID                            {/* return value of ID from symbol table */}
-    | ID '[' expression ']'         {/* This might have to be removed */}
-    | ID '(' expression_list ')'    {/*  */}
-    | INUM                          {/* Return value of INUM */}
-    | RNUM                          {/* Return value of RNUM */}
-    | '(' expression ')'            {/* Pretty much just return expression */}
-    | NOT factor                    {/* Negate whatever the value of factor is */}
+    : ID                            {/* return value of ID from symbol table? */ $$ = mkid($1); }
+    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid($1), $3);}
+    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid($1), $3);}
+    | INUM                          { $$ = mkinum($1); }
+    | RNUM                          { $$ = mkrnum($1); }
+    | '(' expression ')'            { $$ = $2;}
+    | NOT factor                    { $$ = mktree(NOT, $2, NULL);}
     ;
 
 sign
-    : '+' {$$ =  1}
-    | '-' {$$ = -1}
+    : '+' {$$ =  1;}
+    | '-' {$$ = -1;}
     ;
 
 %%

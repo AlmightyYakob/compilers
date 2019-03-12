@@ -1,20 +1,20 @@
 #ifndef TREE_H
 #define TREE_H
 
-#include "symbol_table.h";
+// #include "symbol_table.h"
 
 /******Define Node Types******/
 
 // Leaf node for basic types
-typedef struct {
-	union Type {
-		char *str;
-		int ival;
-		float rval;
-	}
+// typedef struct {
+// 	union Type {
+// 		char *str;
+// 		int ival;
+// 		float rval;
+// 	}
 
-	// Pointer to value in symbol table
-} leaf_node_t;
+// 	// Pointer to value in symbol table
+// } leaf_node_t;
 
 typedef struct {
 	int val;
@@ -29,7 +29,7 @@ typedef struct {
 typedef struct {
 	int type;
 	// Other stuff
-}
+} pp;
 
 
 
@@ -123,8 +123,15 @@ typedef struct program_node_s {
 
 
 typedef struct tree_s {
-	int type; 		/* token type */
-	int attribute; 	/* token attribute*/
+	int type; 		/* token type: INUM, RNUM, ID, RELOP, ADDOP, MULOP, SIGNOP, NOT, ... */
+	union {
+		int 	ival;	/* INUM */
+		float 	rval; 	/* RNUM */
+		char 	*sval; 	/* ID */
+		int 	opval; 	/* RELOP: LT LE GT GE EQ NE */
+						/* ADDOP: PLUS MINUS OR */
+						/* MULOP: STAR SLASH AND */
+	} attribute;
 
 	struct tree_s *left;
 	struct tree_s *right;
@@ -139,11 +146,16 @@ identifier_list make_identifier_list(identifier_node *start);
 
 
 
-/* Constructor */
+/* Constructors */
 tree_t *mktree(int type, tree_t *left, tree_t *right);
 
+/* Special Constructors */
+tree_t *mkid(char *);
+tree_t *mkinum(int);
+tree_t *mkrnum(float);
+tree_t *mkop(int, int, tree_t *, tree_t *);
+
 /* Auxiliary */
-int tree_eval(tree_t *);
 void tree_print(tree_t *);
 
 #endif

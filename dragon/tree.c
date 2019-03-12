@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "tree.h"
 #include "y.tab.h"
 
@@ -29,28 +30,30 @@ tree_t *mktree(int type, tree_t *left, tree_t *right){
     return p;
 }
 
-int tree_eval(tree_t *t){
-    assert (t != NULL);
+/* Specialized Constructors */
 
-    switch (t->type){
-        case '+':
-            return tree_eval(t->left) + tree_eval(t->right);
-        case '-':
-            if (t->right != NULL){
-                return tree_eval(t->left) - tree_eval(t->right);
-            }
-            else return -1*tree_eval(t->left);
-        case '*':
-            return tree_eval(t->left) * tree_eval(t->right);
-        case '/':
-            assert(tree_eval(t->right) != 0);
-            return tree_eval(t->left) / tree_eval(t->right);
-        case INUM:
-            return t->attribute;
-        default:
-            fprintf(stderr, "Tree Eval: unknown type %d\n", t->type);
-            exit(1);
-    }
+tree_t *mkid(char *sval) {
+    tree_t *p = mktree(ID, NULL, NULL);
+    p->attribute.sval = strdup(sval);      /* could cause memory leak */
+    return p;
+}
+
+tree_t *mkinum(int ival) {
+    tree_t *p = mktree(INUM, NULL, NULL);
+    p->attribute.ival = ival;
+    return p;
+}
+
+tree_t *mkrnum(float rval) {
+    tree_t *p = mktree(RNUM, NULL, NULL);
+    p->attribute.rval = rval;
+    return p;
+}
+
+tree_t *mkop(int type, int opval, tree_t *left, tree_t *right){
+    tree_t *p = mktree(type, left, right);
+    p->attribute.opval = opval;
+    return p;
 }
 
 void tree_print(tree_t *t){
@@ -65,16 +68,47 @@ void aux_tree_print(tree_t *t, int spaces){
     }
 
     switch (t->type) {
-        case '+':
-        case '-':
-            fprintf(stderr, "[ADDOP]");
+        case RELOP:
+            fprintf(stderr, "[RELOP: %d]\n", t->attribute.opval);
             break;
-        case '*':
-        case '/':
-            fprintf(stderr, "[MULOP]");
+        case ADDOP:
+            fprintf(stderr, "[ADDOP: %d]\n", t->attribute.opval);
+            break;
+        case MULOP:
+            fprintf(stderr, "[MULOP: %d]\n", t->attribute.opval);
             break;
         case INUM:
-            fprintf(stderr, "[NUM: %d]", t->attribute);
+            fprintf(stderr, "[INUM: %d]", t->attribute.ival);
+            break;
+        case RNUM:
+            fprintf(stderr, "[RNUM: %f]", t->attribute.rval);
+            break;
+        case NOT:
+            fprintf(stderr, "[NOT]\n");
+            break;
+        case FUNCTION_CALL:
+            fprintf(stderr, "[FUNCTION_CALL: %d]\n", t->attribute.opval);
+            break;
+        case PROCEDURE_CALL:
+            fprintf(stderr, "[PROCEDURE_CALL: %d]\n", t->attribute.opval);
+            break;
+        case ARRAY_ACCESS:
+            fprintf(stderr, "[ARRAY_ACCESS: %d]\n", t->attribute.opval);
+            break;
+        case COMMA:
+            fprintf(stderr, "[COMMA]\n");
+            break;
+        case IF:
+            fprintf(stderr, "[IF]\n");
+            break;
+        case THEN:
+            fprintf(stderr, "[THEN]\n");
+            break;
+        case WHILE:
+            fprintf(stderr, "[WHILE]\n");
+            break;
+        case ASSIGNOP:
+            fprintf(stderr, "[ASSIGNOP]\n");
             break;
         
         default:
