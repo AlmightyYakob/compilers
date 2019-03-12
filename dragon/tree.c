@@ -19,7 +19,7 @@ identifier_list make_identifier_list(identifier_node *start){
 }
 
 
-
+/* Constructor */
 tree_t *mktree(int type, tree_t *left, tree_t *right){
     tree_t *p = (tree_t *) malloc(sizeof(tree_t));
     assert (p != NULL);
@@ -31,8 +31,8 @@ tree_t *mktree(int type, tree_t *left, tree_t *right){
 }
 
 /* Specialized Constructors */
-
 tree_t *mkid(char *sval) {
+    // will now pass a pointer to symbol table entry, not sval
     tree_t *p = mktree(ID, NULL, NULL);
     p->attribute.sval = strdup(sval);      /* could cause memory leak */
     return p;

@@ -91,25 +91,25 @@ program
     ;
 
 identifier_list
-    : ID                        {/* return ident with next being NULL...make_identifier($1, NULL); */}
-    | identifier_list ',' ID    {/* return ident with next being the ident_list...make_identifier($3, $1) */}
+    : ID                        {/* $$ = mkid(symtab_insert($1)); */}
+    | identifier_list ',' ID    {/* mktree(COMMA, $1, mkid(symtab_insert($3))); */}
     ;
 
 declarations
-    : declarations VAR sub_declarations
+    : declarations VAR sub_declarations {/* check his notes if unsure*/}
     | /* empty */
     ;
 
 sub_declarations
-    : sub_declarations identifier_list ':' type ';'
+    : sub_declarations identifier_list ':' type ';' {update_type_information($2, $4);}
         {/* Do below, and add sub_declarations as the next pointer */}
     | identifier_list ':' type ';'
         {/* $$ = make_decl_node(make_ident_list($1), $3). make_ident_list also counts num of items in list. */}
     ;
 
 type
-    : standard_type
-    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type
+    : standard_type                                         {$$ = NULL; }
+    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = NULL; }
     ;
 
 standard_type
@@ -184,6 +184,8 @@ unmatched_statement
     | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     ;
 
+/* ------------------below here should use symtab_search with IDs? */
+
 variable
     : ID                        {/* return entry in symbol table to be assigned */}
     | ID '[' expression ']'     {/* Array access*/}
@@ -217,9 +219,9 @@ term
     ;
 
 factor
-    : ID                            {/* return value of ID from symbol table? */ $$ = mkid($1); }
-    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid($1), $3);}
-    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid($1), $3);}
+    : ID                            { $$ = mkid(symtab_search($1));}
+    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid(symtab_search($1)), $3);}
+    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid(symtab_search($1)), $3);}
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
     | '(' expression ')'            { $$ = $2;}
