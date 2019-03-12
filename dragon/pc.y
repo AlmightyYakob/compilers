@@ -57,6 +57,7 @@ extern int yylex();
 
 
 
+%type <tval> program;
 %type <tval> compound_statement;
 %type <tval> optional_statements;
 %type <tval> statement_list;
@@ -75,6 +76,10 @@ extern int yylex();
 
 %%
 
+start
+    : program   {}
+    ;
+
 program
     :
     PROGRAM ID '(' identifier_list ')' ';'
@@ -82,7 +87,7 @@ program
     subprogram_declarations
     compound_statement
     '.'
-    {}
+    {/* print tree */}
     ;
 
 identifier_list
@@ -175,7 +180,7 @@ matched_statement
     ;
 
 unmatched_statement
-    : IF expression THEN statement                                      {$$ = mktree(IF, $2, mktree(THEN, $4, NULL));}
+    : IF expression THEN statement                                      {$$ = mktree(IF, $2, $4);}
     | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     ;
 
@@ -200,9 +205,9 @@ expression
     ;
 
 simple_expression
-    : term                          {$$ = $1; }
+    : term                          { $$ = $1; }
     | sign term                     {/* mkop with add and null right child */}
-    | simple_expression ADDOP term  {/* mkop with add */}
+    | simple_expression ADDOP term  { $$ = mkop(ADDOP, $2, $1, $3); }
     ;
     /* issue here, sign should be lower than ADDOP */
 
