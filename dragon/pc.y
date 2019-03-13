@@ -96,7 +96,7 @@ identifier_list
     ;
 
 declarations
-    : declarations VAR sub_declarations {/* check his notes if unsure*/}
+    : declarations VAR sub_declarations     {/* check his notes if unsure*/}
     | /* empty */
     ;
 
@@ -165,8 +165,8 @@ statement_list
     ;
 
 statement
-    : matched_statement
-    | unmatched_statement
+    : matched_statement     {$$ = $1;}
+    | unmatched_statement   {$$ = $1;}
     ;
 
 matched_statement
@@ -175,7 +175,8 @@ matched_statement
     | variable ASSIGNOP expression      {$$ = mktree(ASSIGNOP, $1, $3);}
     | procedure_statement       {$$ = $1;}
     | compound_statement        {$$ = $1;}
-    | WHILE expression DO statement /* causes shift/reduce conflict */  
+    | WHILE expression DO statement
+        /* causes shift/reduce conflict */  
         {$$ = mktree(WHILE, $2, $4); }
     ;
 
@@ -184,7 +185,7 @@ unmatched_statement
     | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     ;
 
-/* ------------------below here should use symtab_search with IDs? */
+/* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable
     : ID                        {/* return entry in symbol table to be assigned */}
@@ -193,7 +194,7 @@ variable
 
 procedure_statement
     : ID                            {$$ = mkid($1);}
-    | ID '(' expression_list ')'    {$$ = mktree(ARRAY_ACCESS, mkid($1), $3);}
+    | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid($1), $3);}
     ;
 
 expression_list
