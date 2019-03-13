@@ -56,6 +56,13 @@ tree_t *mkop(int type, int opval, tree_t *left, tree_t *right){
     return p;
 }
 
+tree_t *update_type_information(tree_t *node, int type){
+    // Recurse through and set type
+    // Returns original node but with set types
+
+    return node;
+}
+
 void tree_print(tree_t *t){
     aux_tree_print(t, 0);
 }
@@ -95,8 +102,8 @@ void aux_tree_print(tree_t *t, int spaces){
         case ARRAY_ACCESS:
             fprintf(stderr, "[ARRAY_ACCESS: %d]\n", t->attribute.opval);
             break;
-        case COMMA:
-            fprintf(stderr, "[COMMA]\n");
+        case LISTOP:
+            fprintf(stderr, "[LISTOP]\n");
             break;
         case IF:
             fprintf(stderr, "[IF]\n");

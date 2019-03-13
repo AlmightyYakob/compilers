@@ -47,7 +47,7 @@ extern int yylex();
 %token <ival> INUM
 %token <rval> RNUM
 
-%token COMMA
+%token LISTOP
 
 %token ARRAY_ACCESS
 %token FUNCTION_CALL
@@ -58,6 +58,12 @@ extern int yylex();
 
 
 %type <tval> program;
+%type <tval> identifier_list;
+%type <tval> sub_declarations;
+%type <tval> type;                  /* Probably wrong */
+%type <tval> subprogram_head;
+%type <tval> arguments;
+%type <tval> parameter_list;
 %type <tval> compound_statement;
 %type <tval> optional_statements;
 %type <tval> statement_list;
@@ -72,7 +78,7 @@ extern int yylex();
 %type <tval> term;
 %type <tval> factor;
 
-%type <ival> sign;
+//%type <ival> sign;
 
 %%
 
@@ -91,20 +97,18 @@ program
     ;
 
 identifier_list
-    : ID                        {/* $$ = mkid(symtab_insert($1)); */}
-    | identifier_list ',' ID    {/* mktree(COMMA, $1, mkid(symtab_insert($3))); */}
+    : ID                        {$$ = mkid($1);}
+    | identifier_list ',' ID    {mktree(LISTOP, $1, mkid($3));}
     ;
 
 declarations
-    : declarations VAR sub_declarations     {/* check his notes if unsure*/}
+    : declarations VAR sub_declarations     {}
     | /* empty */
     ;
 
 sub_declarations
-    : sub_declarations identifier_list ':' type ';' {update_type_information($2, $4);}
-        {/* Do below, and add sub_declarations as the next pointer */}
-    | identifier_list ':' type ';'
-        {/* $$ = make_decl_node(make_ident_list($1), $3). make_ident_list also counts num of items in list. */}
+    : sub_declarations identifier_list ':' type ';' { $$ = mktree(LISTOP, $1, $2); /*update_type_information($2, $4);*/ }
+    | identifier_list ':' type ';'                  { $$ = $1; /*Update type info of list*/}
     ;
 
 type
@@ -118,8 +122,8 @@ standard_type
     ;
 
 subprogram_declarations
-    : subprogram_declarations subprogram_declaration ';'
-    | /* empty */
+    : subprogram_declarations subprogram_declaration ';'    { $$ = mktree(LISTOP, $1, $2); }
+    | /* empty */                                           {$$ = NULL; }
     ;
 
 subprogram_declaration
@@ -131,8 +135,8 @@ subprogram_declaration
     ;
 
 subprogram_head
-    : FUNCTION ID { /* push new scope */  } arguments ':' maybe_result standard_type ';'
-    | PROCEDURE ID arguments ';'
+    : FUNCTION ID arguments ':' maybe_result standard_type ';'      { $$ = mktree(FUNCTION, mkid($2), $3); /* push new scope and update type info of ID */}
+    | PROCEDURE ID arguments ';'                                    { $$ = mktree(PROCEDURE, mkid($2), $3); }
     ;
 
 maybe_result
@@ -141,13 +145,15 @@ maybe_result
     ;
 
 arguments
-    : '(' parameter_list ')'
-    | /* empty */
+    : '(' parameter_list ')'    {$$ = $2; }
+    | /* empty */               {$$ = NULL; }
     ;
 
 parameter_list
-    : identifier_list ':' type          {}
+    : identifier_list ':' type
+        { $$ = $1; /* update type information of $$ with $3 */ }
     | parameter_list ';' identifier_list ':' type
+        { $$ = mktree(LISTOP, $1, update_type_information($3, $4)); }
     ;
 
 compound_statement
@@ -161,7 +167,7 @@ optional_statements
 
 statement_list
     : statement                         {$$ = $1; }
-    | statement_list ';' statement      {$$ = mktree(COMMA, $1, $3); }
+    | statement_list ';' statement      {$$ = mktree(LISTOP, $1, $3); }
     ;
 
 statement
@@ -170,14 +176,13 @@ statement
     ;
 
 matched_statement
-    : IF expression THEN matched_statement ELSE matched_statement
-        {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
-    | variable ASSIGNOP expression      {$$ = mktree(ASSIGNOP, $1, $3);}
-    | procedure_statement       {$$ = $1;}
-    | compound_statement        {$$ = $1;}
+    : IF expression THEN matched_statement ELSE matched_statement {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
+    | variable ASSIGNOP expression          {$$ = mktree(ASSIGNOP, $1, $3);}
+    | procedure_statement                   {$$ = $1;}
+    | compound_statement                    {$$ = $1;}
     | WHILE expression DO statement
         /* causes shift/reduce conflict */  
-        {$$ = mktree(WHILE, $2, $4); }
+                                            {$$ = mktree(WHILE, $2, $4); }
     ;
 
 unmatched_statement
@@ -188,8 +193,8 @@ unmatched_statement
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable
-    : ID                        {/* return entry in symbol table to be assigned */}
-    | ID '[' expression ']'     {/* Array access*/}
+    : ID                        { $$ = mkid($1); /* return entry in symbol table to be assigned */ }
+    | ID '[' expression ']'     { $$ = mkid($1); /* Array access, add part to handle expression inside brackets */ }
     ;
 
 procedure_statement
@@ -199,17 +204,17 @@ procedure_statement
 
 expression_list
     : expression                        {$$ = $1;}
-    | expression_list ',' expression    {$$ = mktree(COMMA, $1, $3);}
+    | expression_list ',' expression    {$$ = mktree(LISTOP, $1, $3);}
     ;
 
 expression
-    : simple_expression     {$$ = $1;}
-    | simple_expression RELOP simple_expression {/* mkop with RELOP */}
+    : simple_expression                         {$$ = $1;}
+    | simple_expression RELOP simple_expression {$$ = mkop(RELOP, $2, $1, $3); }
     ;
 
 simple_expression
     : term                          { $$ = $1; }
-    | sign term                     {/* mkop with add and null right child */}
+    /* | sign term                     { $$ = mkop(ADDOP, $?, 0, $2); } */
     | simple_expression ADDOP term  { $$ = mkop(ADDOP, $2, $1, $3); }
     ;
     /* issue here, sign should be lower than ADDOP */
@@ -220,19 +225,22 @@ term
     ;
 
 factor
-    : ID                            { $$ = mkid(symtab_search($1));}
-    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid(symtab_search($1)), $3);}
-    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid(symtab_search($1)), $3);}
+    : ID                            { $$ = mkid($1);}
+    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid($1), $3);}
+    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid($1), $3);}
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
     | '(' expression ')'            { $$ = $2;}
     | NOT factor                    { $$ = mktree(NOT, $2, NULL);}
     ;
 
+/* 
 sign
     : '+' {$$ =  1;}
     | '-' {$$ = -1;}
     ;
+ */
+
 
 %%
 
