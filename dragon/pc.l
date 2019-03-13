@@ -14,12 +14,14 @@ extern char yychar;
 number [0-9]+
 ident [A-Za-z][A-Za-z0-9]*
 whitespace [ \t]+
-comment \{[^{]*\}
+comment1 \{[^{]*\}
+comment2 \(\*.*\*\)     /* Should probably be fixed, includes anything between open and close */
 
 
 %%
 {whitespace}    ;
-{comment}       ;
+{comment1}       {printf("COMMENT TYPE 1\n");};
+{comment2}       {printf("COMMENT TYPE 2\n");};
 
 "program"       { fprintf(stderr, "[PROGRAM]");     return PROGRAM; }
 "var"           { fprintf(stderr, "[VAR]");         return VAR; }
@@ -35,7 +37,10 @@ comment \{[^{]*\}
 "then"          { fprintf(stderr, "[THEN]");        return THEN; }
 "else"          { fprintf(stderr, "[ELSE]");        return ELSE; }
 "while"         { fprintf(stderr, "[WHILE]");       return WHILE; }
+"for"           { fprintf(stderr, "[FOR]");       return FOR; }
 "do"            { fprintf(stderr, "[DO]");          return DO; }
+"to"            { fprintf(stderr, "[TO]");          return TO; }
+
 
 "result"        { fprintf(stderr, "[RESULT]");      return RESULT; }
 ".."            { fprintf(stderr, "[DOTDOT]");      return DOTDOT; }

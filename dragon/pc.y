@@ -32,6 +32,7 @@ extern int yylex();
 
 %token IF THEN ELSE
 %token WHILE DO
+%token FOR TO
 
 %token ASSIGNOP
 %token <opval> RELOP
@@ -59,8 +60,11 @@ extern int yylex();
 
 %type <tval> program;
 %type <tval> identifier_list;
+%type <tval> declarations;
 %type <tval> sub_declarations;
 %type <tval> type;                  /* Probably wrong */
+%type <tval> subprogram_declarations;
+%type <tval> subprogram_declaration;
 %type <tval> subprogram_head;
 %type <tval> arguments;
 %type <tval> parameter_list;
@@ -102,13 +106,13 @@ identifier_list
     ;
 
 declarations
-    : declarations VAR sub_declarations     {}
-    | /* empty */
+    : declarations VAR sub_declarations     {$$ = mktree(LISTOP, $1, $3); }
+    | /* empty */                           {$$ = NULL; }
     ;
 
 sub_declarations
     : sub_declarations identifier_list ':' type ';' { $$ = mktree(LISTOP, $1, $2); /*update_type_information($2, $4);*/ }
-    | identifier_list ':' type ';'                  { $$ = $1; /*Update type info of list*/}
+    | identifier_list ':' type ';'                  { $$ = $1; /* update_type_information($1, $3*); */}
     ;
 
 type
@@ -122,7 +126,7 @@ standard_type
     ;
 
 subprogram_declarations
-    : subprogram_declarations subprogram_declaration ';'    { $$ = mktree(LISTOP, $1, $2); }
+    : subprogram_declarations subprogram_declaration ';'    {$$ = mktree(LISTOP, $1, $2); }
     | /* empty */                                           {$$ = NULL; }
     ;
 
@@ -153,7 +157,7 @@ parameter_list
     : identifier_list ':' type
         { $$ = $1; /* update type information of $$ with $3 */ }
     | parameter_list ';' identifier_list ':' type
-        { $$ = mktree(LISTOP, $1, update_type_information($3, $4)); }
+        { $$ = mktree(LISTOP, $1, update_type_information($3, $5)); }
     ;
 
 compound_statement
@@ -180,9 +184,10 @@ matched_statement
     | variable ASSIGNOP expression          {$$ = mktree(ASSIGNOP, $1, $3);}
     | procedure_statement                   {$$ = $1;}
     | compound_statement                    {$$ = $1;}
-    | WHILE expression DO statement
-        /* causes shift/reduce conflict */  
-                                            {$$ = mktree(WHILE, $2, $4); }
+    | WHILE expression DO matched_statement /* statement instead of matched_statement causes shift/reduce conflict */  
+        {$$ = mktree(WHILE, $2, $4); }
+    | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
+        {/* Figure out how to make tree from for */}
     ;
 
 unmatched_statement
@@ -213,14 +218,14 @@ expression
     ;
 
 simple_expression
-    : term                          { $$ = $1; }
-    /* | sign term                     { $$ = mkop(ADDOP, $?, 0, $2); } */
-    | simple_expression ADDOP term  { $$ = mkop(ADDOP, $2, $1, $3); }
+    : term                              { $$ = $1; }
+    /* | sign term                      { $$ = mkop(ADDOP, $?, 0, $2); } */
+    | simple_expression ADDOP term      { $$ = mkop(ADDOP, $2, $1, $3); }
     ;
     /* issue here, sign should be lower than ADDOP */
 
 term
-    : factor                {/* Return factor */ $$ = $1; }
+    : factor                {$$ = $1; }
     | term MULOP factor     {$$ = mkop(MULOP, $2, $1 ,$3);}
     ;
 
@@ -234,6 +239,7 @@ factor
     | NOT factor                    { $$ = mktree(NOT, $2, NULL);}
     ;
 
+/* Not sure what to do with sign */
 /* 
 sign
     : '+' {$$ =  1;}

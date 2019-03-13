@@ -9,16 +9,6 @@ extern int yyerror (char *);
 void aux_tree_print(tree_t *t, int spaces);
 
 
-identifier_node make_identifier(char *name, identifier_node *next){
-	/* malloc ident var with name, and set next to next */
-	printf("###ID = %s###", name);
-}
-
-identifier_list make_identifier_list(identifier_node *start){
-	/* Set start as the start node, and count how many items */
-}
-
-
 /* Constructor */
 tree_t *mktree(int type, tree_t *left, tree_t *right){
     tree_t *p = (tree_t *) malloc(sizeof(tree_t));
@@ -56,7 +46,7 @@ tree_t *mkop(int type, int opval, tree_t *left, tree_t *right){
     return p;
 }
 
-tree_t *update_type_information(tree_t *node, int type){
+tree_t *update_type_information(tree_t *node, tree_t *type){
     // Recurse through and set type
     // Returns original node but with set types
 
