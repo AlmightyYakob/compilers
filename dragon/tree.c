@@ -58,13 +58,24 @@ void tree_print(tree_t *t){
 }
 
 void aux_tree_print(tree_t *t, int spaces){
+    int increment = 2;
     if (t == NULL) return;
 
     for (int i=0; i < spaces; i++){
+        if (i%increment == 0){
+            fprintf(stderr, "|");
+            i++;
+        } 
         fprintf(stderr, " ");
     }
 
     switch (t->type) {
+        case BBEGIN:
+            fprintf(stderr, "[BBEGIN]\n");
+            break;
+        case END:
+            fprintf(stderr, "[END]\n");
+            break;
         case RELOP:
             fprintf(stderr, "[RELOP: %d]\n", t->attribute.opval);
             break;
@@ -75,10 +86,10 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[MULOP: %d]\n", t->attribute.opval);
             break;
         case INUM:
-            fprintf(stderr, "[INUM: %d]", t->attribute.ival);
+            fprintf(stderr, "[INUM: %d]\n", t->attribute.ival);
             break;
         case RNUM:
-            fprintf(stderr, "[RNUM: %f]", t->attribute.rval);
+            fprintf(stderr, "[RNUM: %f]\n", t->attribute.rval);
             break;
         case NOT:
             fprintf(stderr, "[NOT]\n");
@@ -107,12 +118,15 @@ void aux_tree_print(tree_t *t, int spaces){
         case ASSIGNOP:
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
+        case ID:
+            fprintf(stderr, "[ID: %s]\n", t->attribute.sval);
+            break;
         
         default:
             yyerror("Error in tree_print");
     }
-    fprintf(stderr, "\n");
+    // fprintf(stderr, "\n");
 
-    aux_tree_print(t->left, spaces+4);
-    aux_tree_print(t->right, spaces+4);
+    aux_tree_print(t->left, spaces+increment);
+    aux_tree_print(t->right, spaces+increment);
 }

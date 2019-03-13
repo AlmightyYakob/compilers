@@ -161,7 +161,7 @@ parameter_list
     ;
 
 compound_statement
-    : BBEGIN optional_statements END    {$$ = $2; /* might need to tag as begin/end block */}
+    : BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); /* might need to tag as begin/end block */}
     ;
 
 optional_statements
@@ -213,7 +213,7 @@ expression_list
     ;
 
 expression
-    : simple_expression                         {$$ = $1;}
+    : simple_expression                         {$$ = $1; }
     | simple_expression RELOP simple_expression {$$ = mkop(RELOP, $2, $1, $3); }
     ;
 
