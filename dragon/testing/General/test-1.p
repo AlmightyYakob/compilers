@@ -28,7 +28,7 @@ begin
  for x := 1 to (2*y) do
  begin
  	a[x] := foo( 1, b[10], x, b[a[10]] );
-	if ( x <= 5 and x > 0 and x < y ) then
+	if ( (x <= 5) and (x > 0) and (x < y )) then
 	  if ( a[x] < foo( a[1], 3.14, y+z*a[3], 2.13 )) then
 		y := a[x]
 	  else

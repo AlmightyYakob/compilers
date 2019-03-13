@@ -22,7 +22,8 @@ extern int yylex();
     tree_t *tval;
 }
 
-%token PROGRAM
+%token PROGRAM PROGRAM_ROOT PROGRAM_NODE
+%token SUBPROGRAM SUBPROGRAM_ROOT SUBPROGRAM_NODE
 %token BBEGIN END
 %token VAR
 %token PROCEDURE FUNCTION
@@ -87,7 +88,7 @@ extern int yylex();
 %%
 
 start
-    : program   {}
+    : program   {tree_print($1);}
     ;
 
 program
@@ -97,7 +98,7 @@ program
     subprogram_declarations
     compound_statement
     '.'
-    {/* print tree */}
+    {$$ = mkprog($2, $4, $7, $8, $9);}
     ;
 
 identifier_list

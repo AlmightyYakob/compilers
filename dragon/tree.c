@@ -21,6 +21,22 @@ tree_t *mktree(int type, tree_t *left, tree_t *right){
 }
 
 /* Specialized Constructors */
+
+tree_t *mkprog(char *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt){
+    /* Left child is subprogram declarations, right is compound statement */
+    tree_t *bottom = mktree(PROGRAM_NODE, subprog_decls, compound_stmt);
+
+    /* Left child is declarations, right child is bottom */
+    tree_t *middle = mktree(PROGRAM_NODE, decls, bottom);
+
+    /* Left child is ID of program , right child is remaining identifier_list */
+    tree_t *id_node = mktree(LISTOP, mkid(id), ids);
+
+    tree_t *root = mktree(PROGRAM_ROOT, id_node, middle);
+
+    return root;
+}
+
 tree_t *mkid(char *sval) {
     // will now pass a pointer to symbol table entry, not sval
     tree_t *p = mktree(ID, NULL, NULL);
@@ -54,6 +70,7 @@ tree_t *update_type_information(tree_t *node, tree_t *type){
 }
 
 void tree_print(tree_t *t){
+    fprintf(stderr, "\n---BEGIN PRINT TREE---\n");
     aux_tree_print(t, 0);
 }
 
@@ -64,12 +81,21 @@ void aux_tree_print(tree_t *t, int spaces){
     for (int i=0; i < spaces; i++){
         if (i%increment == 0){
             fprintf(stderr, "|");
-            i++;
         } 
         fprintf(stderr, " ");
     }
+    // fprintf(stderr, "type == %d\n", t->type);
 
     switch (t->type) {
+        case PROGRAM:
+            fprintf(stderr, "[PROGRAM]\n");
+            break;
+        case PROGRAM_ROOT:
+            fprintf(stderr, "[PROGRAM_ROOT]\n");
+            break;
+        case PROGRAM_NODE:
+            fprintf(stderr, "[PROGRAM_NODE]\n");
+            break;
         case BBEGIN:
             fprintf(stderr, "[BBEGIN]\n");
             break;
