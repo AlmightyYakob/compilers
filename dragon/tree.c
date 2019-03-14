@@ -62,6 +62,21 @@ tree_t *mkop(int type, int opval, tree_t *left, tree_t *right){
     return p;
 }
 
+tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt){
+    /*                  FOR
+                        /\
+                    TO      do_stmt
+                  /   \
+            ASSIGNOP    to_expr
+            /       \
+        var         assign_expr
+    */
+    tree_t *bottom = mktree(ASSIGNOP, var, assign_expr);
+    tree_t *middle = mktree(TO, bottom, to_expr);
+    tree_t *root = mktree(FOR, middle, do_stmt);
+    return root;
+}
+
 tree_t *update_type_information(tree_t *node, tree_t *type){
     // Recurse through and set type
     // Returns original node but with set types
@@ -120,6 +135,9 @@ void aux_tree_print(tree_t *t, int spaces){
         case NOT:
             fprintf(stderr, "[NOT]\n");
             break;
+        case FUNCTION:
+            fprintf(stderr, "[FUNCTION]\n");
+            break;
         case FUNCTION_CALL:
             fprintf(stderr, "[FUNCTION_CALL: %d]\n", t->attribute.opval);
             break;
@@ -141,6 +159,12 @@ void aux_tree_print(tree_t *t, int spaces){
         case WHILE:
             fprintf(stderr, "[WHILE]\n");
             break;
+        case FOR:
+            fprintf(stderr, "[FOR]\n");
+            break;
+        case TO:
+            fprintf(stderr, "[TO]\n");
+            break;
         case ASSIGNOP:
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
@@ -149,7 +173,8 @@ void aux_tree_print(tree_t *t, int spaces){
             break;
         
         default:
-            yyerror("Error in tree_print");
+            fprintf(stderr, "---Error at node type %d---", t->type);
+            // yyerror("Error in tree_print");
     }
     // fprintf(stderr, "\n");
 

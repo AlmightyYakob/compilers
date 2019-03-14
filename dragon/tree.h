@@ -33,6 +33,7 @@ tree_t *mkinum(int);
 tree_t *mkrnum(float);
 tree_t *mkop(int, int, tree_t *, tree_t *);
 tree_t *mkprog(char *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt);
+tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt);
 
 /* Auxiliary */
 void tree_print(tree_t *);

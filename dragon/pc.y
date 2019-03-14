@@ -98,12 +98,12 @@ program
     subprogram_declarations
     compound_statement
     '.'
-    {$$ = mkprog($2, $4, $7, $8, $9);}
+    {$$ = mkprog($2, $4, $7, $8, $9); }
     ;
 
 identifier_list
     : ID                        {$$ = mkid($1);}
-    | identifier_list ',' ID    {mktree(LISTOP, $1, mkid($3));}
+    | identifier_list ',' ID    {$$ = mktree(LISTOP, $1, mkid($3));}
     ;
 
 declarations
@@ -188,7 +188,7 @@ matched_statement
     | WHILE expression DO matched_statement /* statement instead of matched_statement causes shift/reduce conflict */  
         {$$ = mktree(WHILE, $2, $4); }
     | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
-        {/* Figure out how to make tree from for */}
+        {$$ = mkfor($2, $4, $6, $8); }
     ;
 
 unmatched_statement
