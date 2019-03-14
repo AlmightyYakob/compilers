@@ -64,13 +64,14 @@ tree_t *mkop(int type, int opval, tree_t *left, tree_t *right){
 
 tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt){
     /*                  FOR
-                        /\
-                    TO      do_stmt
+                       / \
+                    TO    do_stmt
                   /   \
             ASSIGNOP    to_expr
             /       \
         var         assign_expr
     */
+
     tree_t *bottom = mktree(ASSIGNOP, var, assign_expr);
     tree_t *middle = mktree(TO, bottom, to_expr);
     tree_t *root = mktree(FOR, middle, do_stmt);
@@ -78,8 +79,12 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
 }
 
 tree_t *update_type_information(tree_t *node, tree_t *type){
+    /* type is a node whose attribute equals the type */
+    /* Need a switch statement to handle these cases  */
+
     // Recurse through and set type
     // Returns original node but with set types
+
 
     return node;
 }
@@ -139,10 +144,10 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[FUNCTION]\n");
             break;
         case FUNCTION_CALL:
-            fprintf(stderr, "[FUNCTION_CALL: %d]\n", t->attribute.opval);
+            fprintf(stderr, "[FUNCTION_CALL]\n");
             break;
         case PROCEDURE_CALL:
-            fprintf(stderr, "[PROCEDURE_CALL: %d]\n", t->attribute.opval);
+            fprintf(stderr, "[PROCEDURE_CALL]\n");
             break;
         case ARRAY_ACCESS:
             fprintf(stderr, "[ARRAY_ACCESS: %d]\n", t->attribute.opval);

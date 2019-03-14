@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <string.h>
 #include "node.h"
+#include "tree.h"
+#include "y.tab.h"
 
 /* Constructors */
 node_t *mknode(char *s){
