@@ -1,7 +1,7 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<assert.h>
-#include "scope.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include "../scope.h"
 
 int main() {
     scope_t *top = NULL;

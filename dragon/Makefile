@@ -3,6 +3,8 @@ FLAGS = -g
 YACC = yacc
 LEX = lex
 
+all: mypc
+
 mypc: y.tab.o lex.yy.o tree.o scope.o node.o
 	$(CC) $(FLAGS) -o mypc y.tab.o lex.yy.o tree.o scope.o node.o -ll -ly
 
@@ -27,5 +29,10 @@ y.tab.c: pc.y
 lex.yy.c: pc.l
 	$(LEX) -l pc.l
 
+
+
+test: tests/test_scope.c
+	$(CC) $(FLAGS) tests/test_scope.c node.c scope.c   
+
 clean:
-	rm -f mypc *.o y.tab.* lex.yy.* *.output
+	rm -f mypc *.o y.tab.* lex.yy.* *.output *.out

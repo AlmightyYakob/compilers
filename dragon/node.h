@@ -6,6 +6,7 @@
 typedef struct node_s {
     char *name;
     struct node_s *next;
+    // Type for var
 } node_t;
 
 /* Constructors */

@@ -61,14 +61,13 @@ node_t *scope_del(scope_t *top, char *name){
 }
 
 
-#define TABLE_SIZE	211
-#define EOS		'\0'
-
 /* ----------------------------------------------------------------------------- 
  * hashpjw
  * Peter J. Weinberger's hash function 
  * Source: Aho, Sethi, and Ullman, "Compilers", Addison-Wesley, 1986 (page 436).
  */
+#define EOS		'\0'
+
 int hashpjw( char *s )
 {
 	char *p; 
@@ -83,7 +82,7 @@ int hashpjw( char *s )
 			h = h ^ g; 
 		} 
 	} 
-	return h % TABLE_SIZE; 
+	return h % HASH_SIZE; 
 }
 
 
