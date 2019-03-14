@@ -22,7 +22,7 @@ tree_t *mktree(int type, tree_t *left, tree_t *right){
 
 /* Specialized Constructors */
 
-tree_t *mkprog(char *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt){
+tree_t *mkprog(node_t *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt){
     /* Left child is subprogram declarations, right is compound statement */
     tree_t *bottom = mktree(PROGRAM_NODE, subprog_decls, compound_stmt);
 
@@ -37,10 +37,10 @@ tree_t *mkprog(char *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree
     return root;
 }
 
-tree_t *mkid(char *sval) {
+tree_t *mkid(node_t *name_ptr) {
     // will now pass a pointer to symbol table entry, not sval
     tree_t *p = mktree(ID, NULL, NULL);
-    p->attribute.sval = strdup(sval);      /* could cause memory leak */
+    p->attribute.sval = name_ptr;
     return p;
 }
 
@@ -169,7 +169,7 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            fprintf(stderr, "[ID: %s]\n", t->attribute.sval);
+            fprintf(stderr, "[ID: %s]\n", t->attribute.sval->name);
             break;
         
         default:

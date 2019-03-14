@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include "scope.h"
 #include "tree.h"
 #include "y.tab.h"
 
 extern int yyerror(char*);
 extern int yylex();
+
+extern scope_t *top_scope;
 
 #define ECHO 1
 
@@ -98,12 +101,12 @@ program
     subprogram_declarations
     compound_statement
     '.'
-    {$$ = mkprog($2, $4, $7, $8, $9); }
+    {$$ = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9); }
     ;
 
 identifier_list
-    : ID                        {$$ = mkid($1);}
-    | identifier_list ',' ID    {$$ = mktree(LISTOP, $1, mkid($3));}
+    : ID                        {$$ = mkid(scope_insert(top_scope, $1));}
+    | identifier_list ',' ID    {$$ = mktree(LISTOP, $1, mkid(scope_insert(top_scope, $3)));}
     ;
 
 declarations
@@ -140,8 +143,8 @@ subprogram_declaration
     ;
 
 subprogram_head
-    : FUNCTION ID arguments ':' maybe_result standard_type ';'      { $$ = mktree(FUNCTION, mkid($2), $3); /* push new scope and update type info of ID */}
-    | PROCEDURE ID arguments ';'                                    { $$ = mktree(PROCEDURE, mkid($2), $3); }
+    : FUNCTION ID arguments ':' maybe_result standard_type ';'      { $$ = mktree(FUNCTION, mkid(scope_insert(top_scope, $2)), $3); /* push new scope and update type info of ID */}
+    | PROCEDURE ID arguments ';'                                    { $$ = mktree(PROCEDURE, mkid(scope_insert(top_scope, $2)), $3); }
     ;
 
 maybe_result
@@ -199,13 +202,13 @@ unmatched_statement
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable
-    : ID                        { $$ = mkid($1); /* return entry in symbol table to be assigned */ }
-    | ID '[' expression ']'     { $$ = mkid($1); /* Array access, add part to handle expression inside brackets */ }
+    : ID                        { $$ = mkid(scope_search_all(top_scope, $1)); /* return entry in symbol table to be assigned */ }
+    | ID '[' expression ']'     { $$ = mkid(scope_search_all(top_scope, $1)); /* Array access, add part to handle expression inside brackets */ }
     ;
 
 procedure_statement
-    : ID                            {$$ = mkid($1);}
-    | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid($1), $3);}
+    : ID                            {$$ = mkid(scope_search_all(top_scope, $1));}
+    | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
     ;
 
 expression_list
@@ -231,9 +234,9 @@ term
     ;
 
 factor
-    : ID                            { $$ = mkid($1);}
-    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid($1), $3);}
-    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid($1), $3);}
+    : ID                            { $$ = mkid(scope_search_all(top_scope, $1));}
+    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid(scope_search_all(top_scope, $1)), $3);}
+    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
     | '(' expression ')'            { $$ = $2;}
@@ -251,6 +254,9 @@ sign
 
 %%
 
+scope_t *top_scope;
+
 int main() {
+    top_scope = mkscope();
     yyparse();
 }

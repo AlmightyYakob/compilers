@@ -1,7 +1,7 @@
 #ifndef TREE_H
 #define TREE_H
 
-// #include "symbol_table.h"
+#include "node.h"
 
 
 typedef struct tree_s {
@@ -9,7 +9,7 @@ typedef struct tree_s {
 	union {
 		int 	ival;	/* INUM */
 		float 	rval; 	/* RNUM */
-		char 	*sval; 	/* ID */
+		node_t 	*sval; 	/* ID */
 		int 	opval; 	/* RELOP: LT LE GT GE EQ NE */
 						/* ADDOP: PLUS MINUS OR */
 						/* MULOP: STAR SLASH AND */
@@ -28,11 +28,11 @@ tree_t *update_type_information(tree_t *node, tree_t *type);
 tree_t *mktree(int type, tree_t *left, tree_t *right);
 
 /* Special Constructors */
-tree_t *mkid(char *);
+tree_t *mkid(node_t *);
 tree_t *mkinum(int);
 tree_t *mkrnum(float);
 tree_t *mkop(int, int, tree_t *, tree_t *);
-tree_t *mkprog(char *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt);
+tree_t *mkprog(node_t *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt);
 tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt);
 
 /* Auxiliary */
