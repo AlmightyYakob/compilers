@@ -52,7 +52,6 @@ extern scope_t *top_scope;
 %token <ival> INUM
 %token <rval> RNUM
 
-<<<<<<< HEAD
 %token LISTOP
 
 %token ARRAY_ACCESS
@@ -88,11 +87,6 @@ extern scope_t *top_scope;
 %type <tval> factor;
 
 //%type <ival> sign;
-=======
-/* Put types here
-    %type <type> program, identifier_list ,etc
-*/
->>>>>>> master
 
 %%
 
