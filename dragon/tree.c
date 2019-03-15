@@ -56,6 +56,13 @@ tree_t *mkrnum(float rval) {
     return p;
 }
 
+tree_t *mkarray(tree_t *lower, tree_t *upper, tree_t *type){
+    tree_t *range = mktree(DOTDOT, lower, upper);
+    tree_t *root = mktree(ARRAY, range, type);
+
+    return root;
+}
+
 tree_t *mkop(int type, int opval, tree_t *left, tree_t *right){
     tree_t *p = mktree(type, left, right);
     p->attribute.opval = opval;
@@ -79,12 +86,15 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
 }
 
 tree_t *update_type_information(tree_t *node, tree_t *type_node){
-    return node;
     /* type is a node whose attribute equals the type */
     /* Need a switch statement to handle these cases  */
 
     // Recurse through and set type
     // Returns original node but with set types
+
+    // return node;
+    if (type_node == NULL) return node;
+    fprintf(stderr, "node type == %d", type_node->type);
 
     tree_t *p = node;
     
@@ -105,11 +115,11 @@ tree_t *update_type_information(tree_t *node, tree_t *type_node){
     }
 
     while (p != NULL){
-        if (p->left->type == LISTOP){
+        if (p->left != NULL && p->left->type == LISTOP){
             p->right->type = type;
             p = p->left;
         }
-        else if (p->right->type == LISTOP){
+        else if (p->right != NULL && p->right->type == LISTOP){
             p->left->type = type;
             p = p->right;
         } 

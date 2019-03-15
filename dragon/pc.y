@@ -67,6 +67,7 @@ extern scope_t *top_scope;
 %type <tval> declarations;
 %type <tval> sub_declarations;
 %type <tval> type;                      /* Probably wrong */
+%type <tval> standard_type;
 %type <tval> subprogram_declarations;
 %type <tval> subprogram_declaration;
 %type <tval> subprogram_head;
@@ -120,13 +121,13 @@ sub_declarations
     ;
 
 type
-    : standard_type                                         {$$ = NULL; }
-    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = NULL; }
+    : standard_type                                         {$$ = mktree($1->type, NULL, NULL); free($1); /* avoid dangling pointer */}
+    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {/* $$ = mkarray(mkinum($3), mkinum($3), $8);  */}
     ;
 
 standard_type
-    : INTEGER
-    | REAL
+    : INTEGER       {$$ = mktree(INTEGER, NULL, NULL); }
+    | REAL          {$$ = mktree(REAL, NULL, NULL); }
     ;
 
 subprogram_declarations
@@ -161,7 +162,7 @@ parameter_list
     : identifier_list ':' type
         { $$ = $1; /* update type information of $$ with $3 */ }
     | parameter_list ';' identifier_list ':' type
-        { $$ = mktree(LISTOP, $1, update_type_information($3, $5)); }
+        {$$ = $1;  /* $$ = mktree(LISTOP, $1, update_type_information($3, $5)); */ }
     ;
 
 compound_statement
