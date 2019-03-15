@@ -78,14 +78,48 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
     return root;
 }
 
-tree_t *update_type_information(tree_t *node, tree_t *type){
+tree_t *update_type_information(tree_t *node, tree_t *type_node){
+    return node;
     /* type is a node whose attribute equals the type */
     /* Need a switch statement to handle these cases  */
 
     // Recurse through and set type
     // Returns original node but with set types
 
+    tree_t *p = node;
+    
+    int type;
+    switch (type_node->type)
+    {
+        case INTEGER:
+            type = INTEGER;
+            break;
+        case REAL:
+            type = REAL;
+            break;
+        
+        /* case for ARRAY ? */
+    
+        default:
+            break;
+    }
 
+    while (p != NULL){
+        if (p->left->type == LISTOP){
+            p->right->type = type;
+            p = p->left;
+        }
+        else if (p->right->type == LISTOP){
+            p->left->type = type;
+            p = p->right;
+        } 
+        else {
+            p->left->type = p->right->type = type;
+            break;
+        };
+    }
+
+    /* Original node */
     return node;
 }
 

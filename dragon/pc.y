@@ -66,7 +66,7 @@ extern scope_t *top_scope;
 %type <tval> identifier_list;
 %type <tval> declarations;
 %type <tval> sub_declarations;
-%type <tval> type;                  /* Probably wrong */
+%type <tval> type;                      /* Probably wrong */
 %type <tval> subprogram_declarations;
 %type <tval> subprogram_declaration;
 %type <tval> subprogram_head;

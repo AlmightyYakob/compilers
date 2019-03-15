@@ -21,7 +21,7 @@ typedef struct tree_s {
 
 
 /* Define Helper Functions */
-tree_t *update_type_information(tree_t *node, tree_t *type);
+tree_t *update_type_information(tree_t *node, tree_t *type_node);
 
 
 /* Constructors */
