@@ -3,9 +3,11 @@
 #include <assert.h>
 #include <string.h>
 #include "tree.h"
+#include "scope.h"
 #include "y.tab.h"
 
 extern int yyerror (char *);
+extern scope_t *top_scope;
 void aux_tree_print(tree_t *t, int spaces);
 
 
@@ -99,14 +101,9 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
 
 tree_t *update_type_information(tree_t *node, tree_t *type_node){
     /* type is a node whose attribute equals the type */
-    /* Need a switch statement to handle these cases  */
 
-    // Recurse through and set type
-    // Returns original node but with set types
-
-    // return node;
-    if (type_node == NULL) return node;
-    fprintf(stderr, "node type == %d", type_node->type);
+    /*************FIX THIS FUNCTION*************************/
+    if (type_node == NULL || node == NULL) return node;
 
     tree_t *p = node;
     
@@ -120,25 +117,49 @@ tree_t *update_type_information(tree_t *node, tree_t *type_node){
             type = REAL;
             break;
         
-        /* case for ARRAY ? */
-    
+        case ARRAY:
+            /* change this case later*/
+            type = ARRAY;
+            break;
+            
         default:
             break;
     }
 
+    fprintf(stderr, "---type == %d---\n", type);
+
     while (p != NULL){
+        fprintf(stderr, "IN LOOP\n");
+        if (p->left == NULL && p->right == NULL) {
+            fprintf(stderr, "BOTH NULL\n");
+            if (p->type == ID) p->attribute.sval->type = type;
+            break;
+        }
+        else if (p->left->type == ID && p->right->type == ID){
+            fprintf(stderr, "BOTH ID\n");
+            p->left->attribute.sval->type = p->right->attribute.sval->type = type;
+            break;
+        }
+
         if (p->left != NULL && p->left->type == LISTOP){
-            p->right->type = type;
+            /* go right and set type of the node_t struct pointed to by attribute.sval */
+            fprintf(stderr, "LEFT NULL\n");
+            p->right->attribute.sval->type = type;
+            fprintf(stderr, "###set type == %d###\n", p->right->attribute.sval->type);
             p = p->left;
         }
         else if (p->right != NULL && p->right->type == LISTOP){
-            p->left->type = type;
+            /* go left and set type of the node_t struct pointed to by attribute.sval */
+            fprintf(stderr, "RIGHT NULL\n");
+            p->left->attribute.sval->type = type;
+            fprintf(stderr, "###set type == %d###\n", p->left->attribute.sval->type);
             p = p->right;
-        } 
+        }
         else {
-            p->left->type = p->right->type = type;
+            if (p->left != NULL) fprintf(stderr, "LEFT == %d\n", p->left->type);
+            if (p->right != NULL) fprintf(stderr, "RIGHT == %d\n", p->right->type);
             break;
-        };
+        }
     }
 
     /* Original node */
@@ -172,6 +193,12 @@ void aux_tree_print(tree_t *t, int spaces){
         case PROGRAM_NODE:
             fprintf(stderr, "[PROGRAM_NODE]\n");
             break;
+        case SUBPROGRAM_ROOT:
+            fprintf(stderr, "[SUBPROGRAM_ROOT]\n");
+            break;
+        case SUBPROGRAM_NODE:
+            fprintf(stderr, "[SUBPROGRAM_NODE]\n");
+            break;
         case BBEGIN:
             fprintf(stderr, "[BBEGIN]\n");
             break;
@@ -198,6 +225,9 @@ void aux_tree_print(tree_t *t, int spaces){
             break;
         case FUNCTION:
             fprintf(stderr, "[FUNCTION]\n");
+            break;
+        case PROCEDURE:
+            fprintf(stderr, "[PROCEDURE]\n");
             break;
         case FUNCTION_CALL:
             fprintf(stderr, "[FUNCTION_CALL]\n");
@@ -230,7 +260,7 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            fprintf(stderr, "[ID: %s]\n", t->attribute.sval->name);
+            fprintf(stderr, "[ID: %s (%d)]\n", t->attribute.sval->name, scope_search_all(top_scope, t->attribute.sval->name)->type);
             break;
         
         default:

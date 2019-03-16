@@ -115,13 +115,13 @@ declarations:
     ;
 
 sub_declarations:
-    sub_declarations identifier_list ':' type ';'   { $$ = mktree(LISTOP, $1, $2); /*update_type_information($2, $4);*/ }
-    | identifier_list ':' type ';'                  { $$ = $1; /* update_type_information($1, $3*); */}
+    sub_declarations identifier_list ':' type ';'   { $$ = mktree(LISTOP, $1, $2); update_type_information($2, $4); /*update_type_information($2, $4);*/ }
+    | identifier_list ':' type ';'                  { $$ = $1; update_type_information($1, $3); /* update_type_information($1, $3*); */}
     ;
 
 type:
     standard_type                                           {$$ = $1; }
-    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {/* $$ = mkarray(mkinum($3), mkinum($3), $8);  */}
+    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = mkarray(mkinum($3), mkinum($3), $8); }
     ;
 
 standard_type:
@@ -140,7 +140,7 @@ subprogram_declaration:
     subprogram_declarations
     compound_statement
 		{ 
-            mksubprog($1, $2, $3, $4);
+            $$ = mksubprog($1, $2, $3, $4);
             /* pop current scope */ 
         }
     ;
@@ -162,9 +162,9 @@ arguments:
 
 parameter_list:
     identifier_list ':' type
-        {$$ = $1;   /* update type information of $$ with $3 */ }
+        {$$ = $1; update_type_information($$, $3); /* update type information of $$ with $3 */ }
     | parameter_list ';' identifier_list ':' type
-        {$$ = $1;   /* $$ = mktree(LISTOP, $1, update_type_information($3, $5)); */ }
+        {$$ = mktree(LISTOP, $1, $3); update_type_information($3, $5);  /* update type info of $3 with $5 */}
     ;
 
 compound_statement:
