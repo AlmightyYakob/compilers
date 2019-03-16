@@ -37,6 +37,18 @@ tree_t *mkprog(node_t *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tr
     return root;
 }
 
+tree_t *mksubprog(tree_t *subprog_head, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt){
+    /* Left child is subprogram declarations, right is compound statement */
+    tree_t *bottom = mktree(SUBPROGRAM_NODE, subprog_decls, compound_stmt);
+
+    /* Left child is declarations, right child is bottom */
+    tree_t *middle = mktree(SUBPROGRAM_NODE, decls, bottom);
+    
+    tree_t *root = mktree(SUBPROGRAM_ROOT, subprog_head, middle);
+
+    return root;
+}
+
 tree_t *mkid(node_t *name_ptr) {
     // will now pass a pointer to symbol table entry, not sval
     tree_t *p = mktree(ID, NULL, NULL);

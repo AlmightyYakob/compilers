@@ -95,8 +95,7 @@ start:
     program   {tree_print($1);}
     ;
 
-program
-    :
+program:
     PROGRAM ID '(' identifier_list ')' ';'
     declarations
     subprogram_declarations
@@ -140,7 +139,10 @@ subprogram_declaration:
     declarations
     subprogram_declarations
     compound_statement
-		{ /* pop current scope */ }
+		{ 
+            mksubprog($1, $2, $3, $4);
+            /* pop current scope */ 
+        }
     ;
 
 subprogram_head:
@@ -185,10 +187,14 @@ statement:
     ;
 
 matched_statement:
-    IF expression THEN matched_statement ELSE matched_statement {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
-    | variable ASSIGNOP expression          {$$ = mktree(ASSIGNOP, $1, $3);}
-    | procedure_statement                   {$$ = $1;}
-    | compound_statement                    {$$ = $1;}
+    IF expression THEN matched_statement ELSE matched_statement 
+        {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
+    | variable ASSIGNOP expression          
+        {$$ = mktree(ASSIGNOP, $1, $3);}
+    | procedure_statement                   
+        {$$ = $1;}
+    | compound_statement                    
+        {$$ = $1;}
     | WHILE expression DO matched_statement /* statement instead of matched_statement causes shift/reduce conflict */  
         {$$ = mktree(WHILE, $2, $4); }
     | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
@@ -196,19 +202,19 @@ matched_statement:
     ;
 
 unmatched_statement:
-    IF expression THEN statement                                        {$$ = mktree(IF, $2, $4);}
+      IF expression THEN statement                                      {$$ = mktree(IF, $2, $4);}
     | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     ;
 
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable:
-    ID                          { $$ = mkid(scope_search_all(top_scope, $1)); /* return entry in symbol table to be assigned */ }
+      ID                        { $$ = mkid(scope_search_all(top_scope, $1)); /* return entry in symbol table to be assigned */ }
     | ID '[' expression ']'     { $$ = mkid(scope_search_all(top_scope, $1)); /* Array access, add part to handle expression inside brackets */ }
     ;
 
 procedure_statement:
-    ID                              {$$ = mkid(scope_search_all(top_scope, $1));}
+      ID                            {$$ = mkid(scope_search_all(top_scope, $1));}
     | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
     ;
 
