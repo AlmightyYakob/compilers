@@ -52,7 +52,7 @@ tree_t *mksubprog(tree_t *subprog_head, tree_t *decls, tree_t *subprog_decls, tr
 }
 
 tree_t *mkid(node_t *name_ptr) {
-    // will now pass a pointer to symbol table entry, not sval
+    if (name_ptr == NULL) return NULL;
     tree_t *p = mktree(ID, NULL, NULL);
     p->attribute.sval = name_ptr;
     return p;
@@ -99,7 +99,7 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
     return root;
 }
 
-tree_t *update_type_information(tree_t *node, tree_t *type_node){
+tree_t *update_type(tree_t *node, tree_t *type_node){
     /* type is a node whose attribute equals the type */
 
     /*************FIX THIS FUNCTION*************************/
@@ -126,7 +126,7 @@ tree_t *update_type_information(tree_t *node, tree_t *type_node){
             break;
     }
 
-    fprintf(stderr, "---type == %d---\n", type);
+    // fprintf(stderr, "---type == %d---\n", type);
 
     while (p != NULL){
         fprintf(stderr, "IN LOOP\n");
@@ -236,7 +236,7 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[PROCEDURE_CALL]\n");
             break;
         case ARRAY_ACCESS:
-            fprintf(stderr, "[ARRAY_ACCESS: %d]\n", t->attribute.opval);
+            fprintf(stderr, "[ARRAY_ACCESS]\n");
             break;
         case LISTOP:
             fprintf(stderr, "[LISTOP]\n");

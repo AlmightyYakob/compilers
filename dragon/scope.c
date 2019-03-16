@@ -42,24 +42,30 @@ node_t *scope_search(scope_t *top, char *name){
     return node_search(tmp, name);
 }
 node_t *scope_search_all(scope_t *top, char *name){
+    // fprintf(stderr, "SEARCHING FOR: %s\n", name);
     scope_t *p = top;
     node_t *tmp;
     while(p != NULL) {
         if ((tmp = scope_search(p, name)) != NULL) return tmp;
         p = p->next;
     }
+
+    fprintf(stderr, "*************** %s NOT FOUND***********\n", name);
     return NULL;
 }
 node_t *scope_insert(scope_t *top, char *name){
+    // fprintf(stderr, "INSERTING: %s\n", name);
     int index = hashpjw(name);
     node_t *tmp = top->table[index];
     top->table[index] = node_insert(tmp, name);
     return top->table[index];
 }
+
 node_t *scope_del(scope_t *top, char *name){
     return NULL;
 }
 
+/* Make scope_search wrapper function for keywords */
 
 /* ----------------------------------------------------------------------------- 
  * hashpjw

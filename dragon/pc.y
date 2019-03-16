@@ -115,8 +115,8 @@ declarations:
     ;
 
 sub_declarations:
-    sub_declarations identifier_list ':' type ';'   { $$ = mktree(LISTOP, $1, $2); update_type_information($2, $4); /*update_type_information($2, $4);*/ }
-    | identifier_list ':' type ';'                  { $$ = $1; update_type_information($1, $3); /* update_type_information($1, $3*); */}
+    sub_declarations identifier_list ':' type ';'   { $$ = mktree(LISTOP, $1, update_type($2, $4)); }
+    | identifier_list ':' type ';'                  { $$ = update_type($1, $3); }
     ;
 
 type:
@@ -141,13 +141,29 @@ subprogram_declaration:
     compound_statement
 		{ 
             $$ = mksubprog($1, $2, $3, $4);
+            fprintf(stderr, "-----------POP--------\n");
+            pop_scope(top_scope);
             /* pop current scope */ 
         }
     ;
 
 subprogram_head:
-    FUNCTION ID arguments ':' maybe_result standard_type ';'        { $$ = mktree(FUNCTION, mkid(scope_insert(top_scope, $2)), $3); /* push new scope and update type info of ID */}
-    | PROCEDURE ID arguments ';'                                    { $$ = mktree(PROCEDURE, mkid(scope_insert(top_scope, $2)), $3); }
+    FUNCTION ID arguments ':' maybe_result standard_type ';'
+        { 
+            /* push new scope and update type info of ID */
+            node_t *func_id = scope_insert(top_scope, $2);
+            fprintf(stderr, "-----------PUSH--------\n");
+            push_scope(top_scope);
+            $$ = mktree(FUNCTION, update_type(mkid(func_id), $6), $3);
+
+        }
+    | PROCEDURE ID arguments ';'
+        { 
+            node_t *proc_id = scope_insert(top_scope, $2);
+            fprintf(stderr, "-----------PUSH--------\n");
+            push_scope(top_scope);
+            $$ = mktree(PROCEDURE, mkid(proc_id), $3);
+        }
     ;
 
 maybe_result:
@@ -162,13 +178,13 @@ arguments:
 
 parameter_list:
     identifier_list ':' type
-        {$$ = $1; update_type_information($$, $3); /* update type information of $$ with $3 */ }
+        {$$ = update_type($1, $3); /* update type information of $1 with $3 */ }
     | parameter_list ';' identifier_list ':' type
-        {$$ = mktree(LISTOP, $1, $3); update_type_information($3, $5);  /* update type info of $3 with $5 */}
+        {$$ = mktree(LISTOP, $1, update_type($3, $5));  /* update type info of $3 with $5 */}
     ;
 
 compound_statement:
-    BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); /* might need to tag as begin/end block */}
+    BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); }
     ;
 
 optional_statements:
@@ -209,7 +225,7 @@ unmatched_statement:
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable:
-      ID                        { $$ = mkid(scope_search_all(top_scope, $1)); /* return entry in symbol table to be assigned */ }
+      ID                        { $$ = mkid(scope_search_all(top_scope, $1)); }
     | ID '[' expression ']'     { $$ = mkid(scope_search_all(top_scope, $1)); /* Array access, add part to handle expression inside brackets */ }
     ;
 
