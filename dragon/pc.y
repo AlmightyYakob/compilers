@@ -91,8 +91,8 @@ extern scope_t *top_scope;
 
 %%
 
-start
-    : program   {tree_print($1);}
+start:
+    program   {tree_print($1);}
     ;
 
 program
@@ -105,87 +105,87 @@ program
     {$$ = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9); }
     ;
 
-identifier_list
-    : ID                        {$$ = mkid(scope_insert(top_scope, $1));}
+identifier_list:
+    ID                          {$$ = mkid(scope_insert(top_scope, $1));}
     | identifier_list ',' ID    {$$ = mktree(LISTOP, $1, mkid(scope_insert(top_scope, $3)));}
     ;
 
-declarations
-    : declarations VAR sub_declarations     {$$ = mktree(LISTOP, $1, $3); }
+declarations:
+    declarations VAR sub_declarations       {$$ = mktree(LISTOP, $1, $3); }
     | /* empty */                           {$$ = NULL; }
     ;
 
-sub_declarations
-    : sub_declarations identifier_list ':' type ';' { $$ = mktree(LISTOP, $1, $2); /*update_type_information($2, $4);*/ }
+sub_declarations:
+    sub_declarations identifier_list ':' type ';'   { $$ = mktree(LISTOP, $1, $2); /*update_type_information($2, $4);*/ }
     | identifier_list ':' type ';'                  { $$ = $1; /* update_type_information($1, $3*); */}
     ;
 
-type
-    : standard_type                                         {$$ = mktree($1->type, NULL, NULL); free($1); /* avoid dangling pointer */}
+type:
+    standard_type                                           {$$ = mktree($1->type, NULL, NULL); free($1); /* avoid dangling pointer */}
     | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {/* $$ = mkarray(mkinum($3), mkinum($3), $8);  */}
     ;
 
-standard_type
-    : INTEGER       {$$ = mktree(INTEGER, NULL, NULL); }
+standard_type:
+    INTEGER         {$$ = mktree(INTEGER, NULL, NULL); }
     | REAL          {$$ = mktree(REAL, NULL, NULL); }
     ;
 
-subprogram_declarations
-    : subprogram_declarations subprogram_declaration ';'    {$$ = mktree(LISTOP, $1, $2); }
+subprogram_declarations:
+    subprogram_declarations subprogram_declaration ';'      {$$ = mktree(LISTOP, $1, $2); }
     | /* empty */                                           {$$ = NULL; }
     ;
 
-subprogram_declaration
-    : subprogram_head
+subprogram_declaration:
+    subprogram_head
     declarations
     subprogram_declarations
     compound_statement
 		{ /* pop current scope */ }
     ;
 
-subprogram_head
-    : FUNCTION ID arguments ':' maybe_result standard_type ';'      { $$ = mktree(FUNCTION, mkid(scope_insert(top_scope, $2)), $3); /* push new scope and update type info of ID */}
+subprogram_head:
+    FUNCTION ID arguments ':' maybe_result standard_type ';'        { $$ = mktree(FUNCTION, mkid(scope_insert(top_scope, $2)), $3); /* push new scope and update type info of ID */}
     | PROCEDURE ID arguments ';'                                    { $$ = mktree(PROCEDURE, mkid(scope_insert(top_scope, $2)), $3); }
     ;
 
-maybe_result
-    : RESULT
+maybe_result:
+    RESULT
     | /* empty */
     ;
 
-arguments
-    : '(' parameter_list ')'    {$$ = $2; }
+arguments: 
+    '(' parameter_list ')'      {$$ = $2; }
     | /* empty */               {$$ = NULL; }
     ;
 
-parameter_list
-    : identifier_list ':' type
-        { $$ = $1; /* update type information of $$ with $3 */ }
+parameter_list:
+    identifier_list ':' type
+        {$$ = $1;   /* update type information of $$ with $3 */ }
     | parameter_list ';' identifier_list ':' type
-        {$$ = $1;  /* $$ = mktree(LISTOP, $1, update_type_information($3, $5)); */ }
+        {$$ = $1;   /* $$ = mktree(LISTOP, $1, update_type_information($3, $5)); */ }
     ;
 
-compound_statement
-    : BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); /* might need to tag as begin/end block */}
+compound_statement:
+    BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); /* might need to tag as begin/end block */}
     ;
 
-optional_statements
-    : statement_list    {$$ = $1;}
+optional_statements:
+    statement_list      {$$ = $1;}
     | /* empty */       {$$ = NULL;}
     ;
 
-statement_list
-    : statement                         {$$ = $1; }
+statement_list:
+    statement                           {$$ = $1; }
     | statement_list ';' statement      {$$ = mktree(LISTOP, $1, $3); }
     ;
 
-statement
-    : matched_statement     {$$ = $1;}
+statement:
+    matched_statement       {$$ = $1;}
     | unmatched_statement   {$$ = $1;}
     ;
 
-matched_statement
-    : IF expression THEN matched_statement ELSE matched_statement {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
+matched_statement:
+    IF expression THEN matched_statement ELSE matched_statement {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     | variable ASSIGNOP expression          {$$ = mktree(ASSIGNOP, $1, $3);}
     | procedure_statement                   {$$ = $1;}
     | compound_statement                    {$$ = $1;}
@@ -195,47 +195,47 @@ matched_statement
         {$$ = mkfor($2, $4, $6, $8); }
     ;
 
-unmatched_statement
-    : IF expression THEN statement                                      {$$ = mktree(IF, $2, $4);}
+unmatched_statement:
+    IF expression THEN statement                                        {$$ = mktree(IF, $2, $4);}
     | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
     ;
 
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
-variable
-    : ID                        { $$ = mkid(scope_search_all(top_scope, $1)); /* return entry in symbol table to be assigned */ }
+variable:
+    ID                          { $$ = mkid(scope_search_all(top_scope, $1)); /* return entry in symbol table to be assigned */ }
     | ID '[' expression ']'     { $$ = mkid(scope_search_all(top_scope, $1)); /* Array access, add part to handle expression inside brackets */ }
     ;
 
-procedure_statement
-    : ID                            {$$ = mkid(scope_search_all(top_scope, $1));}
+procedure_statement:
+    ID                              {$$ = mkid(scope_search_all(top_scope, $1));}
     | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
     ;
 
-expression_list
-    : expression                        {$$ = $1;}
+expression_list:
+    expression                          {$$ = $1;}
     | expression_list ',' expression    {$$ = mktree(LISTOP, $1, $3);}
     ;
 
-expression
-    : simple_expression                         {$$ = $1; }
+expression:
+    simple_expression                           {$$ = $1; }
     | simple_expression RELOP simple_expression {$$ = mkop(RELOP, $2, $1, $3); }
     ;
 
-simple_expression
-    : term                              { $$ = $1; }
+simple_expression:
+    term                                { $$ = $1; }
     /* | sign term                      { $$ = mkop(ADDOP, $?, 0, $2); } */
     | simple_expression ADDOP term      { $$ = mkop(ADDOP, $2, $1, $3); }
     ;
     /* issue here, sign should be lower than ADDOP */
 
-term
-    : factor                {$$ = $1; }
+term:
+    factor                  {$$ = $1; }
     | term MULOP factor     {$$ = mkop(MULOP, $2, $1 ,$3);}
     ;
 
-factor
-    : ID                            { $$ = mkid(scope_search_all(top_scope, $1));}
+factor:
+    ID                              { $$ = mkid(scope_search_all(top_scope, $1));}
     | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid(scope_search_all(top_scope, $1)), $3);}
     | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
     | INUM                          { $$ = mkinum($1); }
