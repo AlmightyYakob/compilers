@@ -121,7 +121,7 @@ sub_declarations:
     ;
 
 type:
-    standard_type                                           {$$ = mktree($1->type, NULL, NULL); free($1); /* avoid dangling pointer */}
+    standard_type                                           {$$ = $1; }
     | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {/* $$ = mkarray(mkinum($3), mkinum($3), $8);  */}
     ;
 
