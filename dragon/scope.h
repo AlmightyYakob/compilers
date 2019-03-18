@@ -24,4 +24,7 @@ node_t     *scope_search(scope_t *top, char *name);
 node_t     *scope_insert(scope_t *top, char *name);
 node_t        *scope_del(scope_t *top, char *name);
 
+/* Misc */
+void scope_print(scope_t *current_scope);
+
 #endif

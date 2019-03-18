@@ -129,35 +129,35 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
     // fprintf(stderr, "---type == %d---\n", type);
 
     while (p != NULL){
-        fprintf(stderr, "IN LOOP\n");
+        // fprintf(stderr, "IN LOOP\n");
         if (p->left == NULL && p->right == NULL) {
-            fprintf(stderr, "BOTH NULL\n");
+            // fprintf(stderr, "BOTH NULL\n");
             if (p->type == ID) p->attribute.sval->type = type;
             break;
         }
         else if (p->left->type == ID && p->right->type == ID){
-            fprintf(stderr, "BOTH ID\n");
+            // fprintf(stderr, "BOTH ID\n");
             p->left->attribute.sval->type = p->right->attribute.sval->type = type;
             break;
         }
 
         if (p->left != NULL && p->left->type == LISTOP){
             /* go right and set type of the node_t struct pointed to by attribute.sval */
-            fprintf(stderr, "LEFT NULL\n");
+            // fprintf(stderr, "LEFT NULL\n");
             p->right->attribute.sval->type = type;
-            fprintf(stderr, "###set type == %d###\n", p->right->attribute.sval->type);
+            // fprintf(stderr, "###set type == %d###\n", p->right->attribute.sval->type);
             p = p->left;
         }
         else if (p->right != NULL && p->right->type == LISTOP){
             /* go left and set type of the node_t struct pointed to by attribute.sval */
-            fprintf(stderr, "RIGHT NULL\n");
+            // fprintf(stderr, "RIGHT NULL\n");
             p->left->attribute.sval->type = type;
-            fprintf(stderr, "###set type == %d###\n", p->left->attribute.sval->type);
+            // fprintf(stderr, "###set type == %d###\n", p->left->attribute.sval->type);
             p = p->right;
         }
         else {
-            if (p->left != NULL) fprintf(stderr, "LEFT == %d\n", p->left->type);
-            if (p->right != NULL) fprintf(stderr, "RIGHT == %d\n", p->right->type);
+            // if (p->left != NULL) fprintf(stderr, "LEFT == %d\n", p->left->type);
+            // if (p->right != NULL) fprintf(stderr, "RIGHT == %d\n", p->right->type);
             break;
         }
     }

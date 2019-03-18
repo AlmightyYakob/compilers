@@ -142,7 +142,7 @@ subprogram_declaration:
 		{ 
             $$ = mksubprog($1, $2, $3, $4);
             fprintf(stderr, "-----------POP--------\n");
-            pop_scope(top_scope);
+            top_scope = pop_scope(top_scope);
             /* pop current scope */ 
         }
     ;
@@ -153,7 +153,7 @@ subprogram_head:
             /* push new scope and update type info of ID */
             node_t *func_id = scope_insert(top_scope, $2);
             fprintf(stderr, "-----------PUSH--------\n");
-            push_scope(top_scope);
+            top_scope = push_scope(top_scope);
             $$ = mktree(FUNCTION, update_type(mkid(func_id), $6), $3);
 
         }
@@ -161,7 +161,7 @@ subprogram_head:
         { 
             node_t *proc_id = scope_insert(top_scope, $2);
             fprintf(stderr, "-----------PUSH--------\n");
-            push_scope(top_scope);
+            top_scope = push_scope(top_scope);
             $$ = mktree(PROCEDURE, mkid(proc_id), $3);
         }
     ;

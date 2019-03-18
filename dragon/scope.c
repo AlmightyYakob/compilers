@@ -67,6 +67,23 @@ node_t *scope_del(scope_t *top, char *name){
 
 /* Make scope_search wrapper function for keywords */
 
+
+/* Print Scope */
+void scope_print(scope_t *current_scope){
+    fprintf(stderr, "----BEGIN PRINT SCOPE----\n");
+
+    int i;
+    node_t *entry;
+    for (i = 0; i < HASH_SIZE; i++){
+        entry = current_scope->table[i];
+        if (entry != NULL) 
+            fprintf(stderr, "# %s: %d\n", entry->name, entry->type);
+    }
+
+    fprintf(stderr, "----END PRINT SCOPE----\n");
+}
+
+
 /* ----------------------------------------------------------------------------- 
  * hashpjw
  * Peter J. Weinberger's hash function 
