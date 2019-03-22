@@ -50,7 +50,7 @@ node_t *scope_search_all(scope_t *top, char *name){
         p = p->next;
     }
 
-    fprintf(stderr, "*************** %s NOT FOUND***********\n", name);
+    // fprintf(stderr, "*************** %s NOT FOUND***********\n", name);
     return NULL;
 }
 node_t *scope_insert(scope_t *top, char *name){

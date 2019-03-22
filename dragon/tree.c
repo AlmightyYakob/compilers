@@ -172,7 +172,9 @@ void tree_print(tree_t *t){
 }
 
 void aux_tree_print(tree_t *t, int spaces){
+    node_t *idNode;
     int increment = 2;
+
     if (t == NULL) return;
 
     for (int i=0; i < spaces; i++){
@@ -260,7 +262,11 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            fprintf(stderr, "[ID: %s (%d)]\n", t->attribute.sval->name, scope_search_all(top_scope, t->attribute.sval->name)->type);
+            idNode = scope_search_all(top_scope, t->attribute.sval->name);
+            if (idNode != NULL){
+                fprintf(stderr, "[ID: %s (%d)]\n", t->attribute.sval->name, idNode->type);
+            }
+            else  fprintf(stderr, "[ID: %s (NULL)]\n", t->attribute.sval->name);
             break;
         
         default:
