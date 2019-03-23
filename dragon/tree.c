@@ -262,11 +262,7 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            idNode = scope_search_all(top_scope, t->attribute.sval->name);
-            if (idNode != NULL){
-                fprintf(stderr, "[ID: %s (%d)]\n", t->attribute.sval->name, idNode->type);
-            }
-            else  fprintf(stderr, "[ID: %s (NULL)]\n", t->attribute.sval->name);
+            fprintf(stderr, "[IDL %s (%d)]\n", t->attribute.sval->name, t->attribute.sval->type);
             break;
         
         default:
