@@ -262,7 +262,7 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            fprintf(stderr, "[IDL %s (%d)]\n", t->attribute.sval->name, t->attribute.sval->type);
+            fprintf(stderr, "[ID: %s (%d)]\n", t->attribute.sval->name, t->attribute.sval->type);
             break;
         
         default:
