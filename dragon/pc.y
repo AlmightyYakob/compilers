@@ -105,8 +105,17 @@ program:
     ;
 
 identifier_list:
-    ID                          {$$ = mkid(scope_insert(top_scope, $1));}
-    | identifier_list ',' ID    {$$ = mktree(LISTOP, $1, mkid(scope_insert(top_scope, $3)));}
+    ID {
+        if (scope_search(top_scope, $1) != NULL) {
+            // char *buf;
+            // sprintf(buf, "Redeclaration of %s\n", $1);
+            // yyerror(buf);
+            yyerror("yoink");
+        }
+        $$ = mkid(scope_insert(top_scope, $1));
+    }
+    | identifier_list ',' ID    
+        {$$ = mktree(LISTOP, $1, mkid(scope_insert(top_scope, $3)));}
     ;
 
 declarations:
@@ -141,9 +150,9 @@ subprogram_declaration:
     compound_statement
 		{ 
             $$ = mksubprog($1, $2, $3, $4);
+            /* pop current scope */ 
             fprintf(stderr, "-----------POP--------\n");
             top_scope = pop_scope(top_scope);
-            /* pop current scope */ 
         }
     ;
 
