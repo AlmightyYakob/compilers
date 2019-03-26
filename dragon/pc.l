@@ -69,15 +69,19 @@ comment2 \(\*.*\*\)     /* Should probably be fixed, includes anything between o
 {number}"."{number}     { if (DEBUG) fprintf(stderr, "[RNUM:%f]", atof(yytext)); yylval.rval = (float) atof(yytext); return RNUM; }
 {ident}                 { if (DEBUG) fprintf(stderr, "[ID:%s]", yytext); yylval.sval = strdup(yytext); return ID; }
 
-";"         { return yytext[0]; }
-"\n"        { if (DEBUG) fprintf(stderr, "\n"); /* Add line counting here */ }
-.           { if (DEBUG) fprintf(stderr, "{%c}", yytext[0]); return yytext[0]; }
+";"                     { return yytext[0]; }
+"\n"                    { if (DEBUG) fprintf(stderr, "\n"); /* Add line counting here */ }
+.                       { if (DEBUG) fprintf(stderr, "{%c}", yytext[0]); return yytext[0]; }
 
 
 %%
 
 int yyerror (char *msg) {
     fprintf(stderr, "\nError: %s\n", msg);
-    fprintf(stderr, "Error at string \"%s\"\n", yytext);
+    // fprintf(stderr, "Error at string \"%s\"\n", yytext);
     exit(1);
 }
+
+// void debug_print(char *msg, int token) {
+//     if (DEBUG) fprintf(stderr, );
+// }
