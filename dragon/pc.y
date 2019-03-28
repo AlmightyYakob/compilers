@@ -222,29 +222,55 @@ statement:
 
 matched_statement:
     IF expression THEN matched_statement ELSE matched_statement
-        {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
+        {   
+            /* Check that expression is BOOLEAN */
+            $$ = mktree(IF, $2, mktree(THEN, $4, $6));
+        }
     | variable ASSIGNOP expression
-        {$$ = mktree(ASSIGNOP, $1, $3);}
+        {
+            /* Check that variable and expression are the same type */
+            $$ = mktree(ASSIGNOP, $1, $3);
+        }
     | procedure_statement
         {$$ = $1;}
     | compound_statement
         {$$ = $1;}
     | WHILE expression DO matched_statement /* statement instead of matched_statement causes shift/reduce conflict */  
-        {$$ = mktree(WHILE, $2, $4); }
+        {
+            /* Check that expression is BOOLEAN */
+            $$ = mktree(WHILE, $2, $4); 
+        }
     | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
-        {$$ = mkfor($2, $4, $6, $8); }
+        {
+            /* Check that types of variable? and both expressions match */
+            $$ = mkfor($2, $4, $6, $8); 
+        }
     ;
 
 unmatched_statement:
-      IF expression THEN statement                                      {$$ = mktree(IF, $2, $4);}
-    | IF expression THEN matched_statement ELSE unmatched_statement     {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
+      IF expression THEN statement                                      
+        {   
+            /* Check that expression is BOOLEAN */
+            $$ = mktree(IF, $2, $4);
+        }
+    | IF expression THEN matched_statement ELSE unmatched_statement     
+        {
+            /* Check that expression is BOOLEAN */
+            $$ = mktree(IF, $2, mktree(THEN, $4, $6));
+        }
     ;
 
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable:
       ID                        { $$ = mkid(scope_search_all(top_scope, $1)); }
-    | ID '[' expression ']'     { $$ = mkid(scope_search_all(top_scope, $1)); /* Array access, add part to handle expression inside brackets */ }
+    | ID '[' expression ']'     
+        { 
+            /* Array access */
+            /* Check that expression is of type INTEGER */ 
+            
+            $$ = mkid(scope_search_all(top_scope, $1)); 
+        }
     ;
 
 procedure_statement:
@@ -259,10 +285,11 @@ expression_list:
 
 expression:
     simple_expression                           {$$ = $1; }
-    | simple_expression RELOP simple_expression {$$ = mkop(RELOP, $2, $1, $3); }
+    | simple_expression RELOP simple_expression {$$ = mkop(RELOP, $2, $1, $3); /* BOOLEAN TYPE */}
     ;
 
 simple_expression:
+    /* Here, need to check type of all children, to ensure matching */
     term                                { $$ = $1; }
     /* | sign term                      { $$ = mkop(ADDOP, $?, 0, $2); } */
     | simple_expression ADDOP term      { $$ = mkop(ADDOP, $2, $1, $3); }
