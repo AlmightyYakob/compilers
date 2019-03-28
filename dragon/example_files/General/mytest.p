@@ -1,5 +1,5 @@
 program main( input, output );
-  var a, b: integer;
+  var a, b , b: integer;
   function foo( x, y: integer ): integer;
   begin
 	foo := x * x - y * y

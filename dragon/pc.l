@@ -8,7 +8,7 @@
 #include "y.tab.h"
 
 extern char yychar;
-#define DEBUG 1
+#define DEBUG 0
 %}
 
 number [0-9]+

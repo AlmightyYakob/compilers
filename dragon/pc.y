@@ -107,15 +107,17 @@ program:
 identifier_list:
     ID {
         if (scope_search(top_scope, $1) != NULL) {
-            // char *buf;
-            // sprintf(buf, "Redeclaration of %s\n", $1);
-            // yyerror(buf);
-            yyerror("yoink");
+            yyerror("ID defined twice");
         }
         $$ = mkid(scope_insert(top_scope, $1));
     }
     | identifier_list ',' ID    
-        {$$ = mktree(LISTOP, $1, mkid(scope_insert(top_scope, $3)));}
+        {
+            if (scope_search(top_scope, $3) != NULL) {
+                yyerror("ID defined twice");
+            }
+            $$ = mktree(LISTOP, $1, mkid(scope_insert(top_scope, $3)));
+        }
     ;
 
 declarations:
@@ -157,22 +159,29 @@ subprogram_declaration:
     ;
 
 subprogram_head:
-    FUNCTION ID arguments ':' maybe_result standard_type ';'
-        { 
-            /* push new scope and update type info of ID */
+    FUNCTION ID {
+            if (scope_search(top_scope, $2) != NULL) {
+                yyerror("Function ID defined twice");
+            }
             node_t *func_id = scope_insert(top_scope, $2);
             fprintf(stderr, "-----------PUSH--------\n");
             top_scope = push_scope(top_scope);
-            $$ = mktree(FUNCTION, update_type(mkid(func_id), $6), $3);
-
+    } arguments ':' maybe_result standard_type ';' { 
+            /* push new scope and update type info of ID */
+            node_t *func_id_node = scope_search_all(top_scope, $2);
+            $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
+    }
+    | PROCEDURE ID {
+        if (scope_search(top_scope, $2) != NULL) {
+            yyerror("Procedure ID defined twice");
         }
-    | PROCEDURE ID arguments ';'
-        { 
-            node_t *proc_id = scope_insert(top_scope, $2);
-            fprintf(stderr, "-----------PUSH--------\n");
-            top_scope = push_scope(top_scope);
-            $$ = mktree(PROCEDURE, mkid(proc_id), $3);
-        }
+        node_t *proc_id = scope_insert(top_scope, $2);
+        fprintf(stderr, "-----------PUSH--------\n");
+        top_scope = push_scope(top_scope);
+    } arguments ';' {
+        node_t *proc_id_node = scope_search_all(top_scope, $2);
+        $$ = mktree(PROCEDURE, mkid(proc_id_node), $4);
+    }
     ;
 
 maybe_result:
@@ -212,13 +221,13 @@ statement:
     ;
 
 matched_statement:
-    IF expression THEN matched_statement ELSE matched_statement 
+    IF expression THEN matched_statement ELSE matched_statement
         {$$ = mktree(IF, $2, mktree(THEN, $4, $6));}
-    | variable ASSIGNOP expression          
+    | variable ASSIGNOP expression
         {$$ = mktree(ASSIGNOP, $1, $3);}
-    | procedure_statement                   
+    | procedure_statement
         {$$ = $1;}
-    | compound_statement                    
+    | compound_statement
         {$$ = $1;}
     | WHILE expression DO matched_statement /* statement instead of matched_statement causes shift/reduce conflict */  
         {$$ = mktree(WHILE, $2, $4); }
