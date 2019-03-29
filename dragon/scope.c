@@ -37,6 +37,7 @@ scope_t *pop_scope(scope_t *top){
 
 /* Helpers */
 node_t *scope_search(scope_t *top, char *name){
+    // fprintf(stderr, "LOOK FOR %s\n", name);
     int index = hashpjw(name);
     node_t *tmp = top->table[index];
     return node_search(tmp, name);

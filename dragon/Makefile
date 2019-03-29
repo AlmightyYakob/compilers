@@ -5,8 +5,11 @@ LEX = lex
 
 all: mypc
 
-mypc: y.tab.o lex.yy.o tree.o scope.o node.o
+mypc: y.tab.o lex.yy.o tree.o scope.o node.o type.o
 	$(CC) $(FLAGS) -o mypc y.tab.o lex.yy.o tree.o scope.o node.o -ll -ly
+
+type.o: type.c
+	$(CC) $(FLAGS) -c type.c
 
 tree.o: tree.c
 	$(CC) $(FLAGS) -c tree.c

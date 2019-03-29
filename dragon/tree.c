@@ -5,6 +5,7 @@
 #include "tree.h"
 #include "scope.h"
 #include "y.tab.h"
+#include "type.h"
 
 extern int yyerror (char *);
 extern scope_t *top_scope;
@@ -15,7 +16,12 @@ void aux_tree_print(tree_t *t, int spaces);
 tree_t *mktree(int type, tree_t *left, tree_t *right){
     tree_t *p = (tree_t *) malloc(sizeof(tree_t));
     assert (p != NULL);
-    p->type = type;
+
+    p->type = (type_t *) malloc(sizeof(type_t));
+    assert (p->type != NULL);
+
+    // p->type = type;
+    p->type->tree_node_type = type;
     p->left = left;
     p->right = right;
 
@@ -105,13 +111,12 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
 tree_t *update_type(tree_t *node, tree_t *type_node){
     /* type is a node whose attribute equals the type */
 
-    /*************FIX THIS FUNCTION*************************/
     if (type_node == NULL || node == NULL) return node;
 
     tree_t *p = node;
     
     int type;
-    switch (type_node->type)
+    switch (type_node->type->tree_node_type)
     {
         case INTEGER:
             type = INTEGER;
@@ -135,23 +140,23 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
         // fprintf(stderr, "IN LOOP\n");
         if (p->left == NULL && p->right == NULL) {
             // fprintf(stderr, "BOTH NULL\n");
-            if (p->type == ID) p->attribute.sval->type = type;
+            if (p->type->tree_node_type == ID) p->attribute.sval->type = type;
             break;
         }
-        else if (p->left->type == ID && p->right->type == ID){
+        else if (p->left->type->tree_node_type == ID && p->right->type->tree_node_type == ID){
             // fprintf(stderr, "BOTH ID\n");
             p->left->attribute.sval->type = p->right->attribute.sval->type = type;
             break;
         }
 
-        if (p->left != NULL && p->left->type == LISTOP){
+        if (p->left != NULL && p->left->type->tree_node_type == LISTOP){
             /* go right and set type of the node_t struct pointed to by attribute.sval */
             // fprintf(stderr, "LEFT NULL\n");
             p->right->attribute.sval->type = type;
             // fprintf(stderr, "###set type == %d###\n", p->right->attribute.sval->type);
             p = p->left;
         }
-        else if (p->right != NULL && p->right->type == LISTOP){
+        else if (p->right != NULL && p->right->type->tree_node_type == LISTOP){
             /* go left and set type of the node_t struct pointed to by attribute.sval */
             // fprintf(stderr, "RIGHT NULL\n");
             p->left->attribute.sval->type = type;
@@ -188,7 +193,7 @@ void aux_tree_print(tree_t *t, int spaces){
     }
     // fprintf(stderr, "type == %d\n", t->type);
 
-    switch (t->type) {
+    switch (t->type->tree_node_type) {
         case PROGRAM:
             fprintf(stderr, "[PROGRAM]\n");
             break;
@@ -269,7 +274,7 @@ void aux_tree_print(tree_t *t, int spaces){
             break;
         
         default:
-            fprintf(stderr, "---Error at node type %d---", t->type);
+            fprintf(stderr, "---Error at node type %d---", t->type->tree_node_type);
             // yyerror("Error in tree_print");
     }
     // fprintf(stderr, "\n");

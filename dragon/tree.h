@@ -2,10 +2,11 @@
 #define TREE_H
 
 #include "node.h"
+#include "type.h"
 
 
 typedef struct tree_s {
-	int type; 		/* token type: INUM, RNUM, ID, RELOP, ADDOP, MULOP, SIGNOP, NOT, ... */
+	type_t *type; 		/* token type: INUM, RNUM, ID, RELOP, ADDOP, MULOP, SIGNOP, NOT, ... */
 	union {
 		int 	ival;	/* INUM */
 		float 	rval; 	/* RNUM */
