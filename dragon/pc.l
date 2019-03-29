@@ -8,6 +8,7 @@
 #include "y.tab.h"
 
 extern char yychar;
+extern int CURRENT_LINE_NUM;
 #define DEBUG 0
 %}
 
@@ -70,7 +71,7 @@ comment2 \(\*.*\*\)     /* Should probably be fixed, includes anything between o
 {ident}                 { if (DEBUG) fprintf(stderr, "[ID:%s]", yytext); yylval.sval = strdup(yytext); return ID; }
 
 ";"                     { return yytext[0]; }
-"\n"                    { if (DEBUG) fprintf(stderr, "\n"); /* Add line counting here */ }
+"\n"                    { if (DEBUG) fprintf(stderr, "\n"); CURRENT_LINE_NUM++; /* Add line counting here */ }
 .                       { if (DEBUG) fprintf(stderr, "{%c}", yytext[0]); return yytext[0]; }
 
 

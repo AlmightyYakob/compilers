@@ -263,9 +263,12 @@ unmatched_statement:
 /* ------------------below here should use mkid(symtab_search) for IDs? */
 
 variable:
-      ID                        { $$ = mkid(scope_search_all(top_scope, $1)); }
-    | ID '[' expression ']'     
-        { 
+      ID
+        {
+            $$ = mkid(scope_search_all(top_scope, $1));
+        }
+    | ID '[' expression ']'
+        {
             /* Array access */
             /* Check that expression is of type INTEGER */ 
             
@@ -323,6 +326,7 @@ sign
 %%
 
 scope_t *top_scope;
+int CURRENT_LINE_NUM;
 
 int main() {
     top_scope = mkscope();

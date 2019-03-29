@@ -54,7 +54,7 @@ tree_t *mksubprog(tree_t *subprog_head, tree_t *decls, tree_t *subprog_decls, tr
 tree_t *mkid(node_t *name_ptr) {
     if (name_ptr == NULL) {
         yyerror("ID NOT FOUND");
-        return NULL;
+        // return NULL;
     }
     tree_t *p = mktree(ID, NULL, NULL);
     p->attribute.sval = name_ptr;
