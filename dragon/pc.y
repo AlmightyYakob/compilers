@@ -5,6 +5,7 @@
 #include <string.h>
 #include "scope.h"
 #include "tree.h"
+#include "type.h"
 #include "y.tab.h"
 
 extern int yyerror(char*);
@@ -57,6 +58,10 @@ extern scope_t *top_scope;
 %token ARRAY_ACCESS
 %token FUNCTION_CALL
 %token PROCEDURE_CALL
+
+
+%token ERROR
+%token BOOL
 
 
 
@@ -229,6 +234,12 @@ matched_statement:
     | variable ASSIGNOP expression
         {
             /* Check that variable and expression are the same type */
+            eval_type($1);
+            eval_type($3);
+            if (super_type($1) != super_type($3)){
+                yyerror("Mismatched types in assignment");
+            }
+
             $$ = mktree(ASSIGNOP, $1, $3);
         }
     | procedure_statement
@@ -238,11 +249,20 @@ matched_statement:
     | WHILE expression DO matched_statement /* statement instead of matched_statement causes shift/reduce conflict */  
         {
             /* Check that expression is BOOLEAN */
+            check_bool($2);
             $$ = mktree(WHILE, $2, $4); 
         }
     | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
         {
             /* Check that types of variable? and both expressions match */
+            eval_type($2);
+            eval_type($4);
+            eval_type($6);
+
+            if (super_type($2) != super_type($4) || super_type($4) != super_type($6)){
+                yyerror("Type mismatch in FOR expression");
+            }
+
             $$ = mkfor($2, $4, $6, $8); 
         }
     ;
@@ -251,11 +271,23 @@ unmatched_statement:
       IF expression THEN statement                                      
         {   
             /* Check that expression is BOOLEAN */
+            // eval_type($2);
+            // if (super_type($2) != BOOL) {
+            //     yyerror("Using non-boolean expression in conditional statment");
+            // }
+
+            check_bool($2);
             $$ = mktree(IF, $2, $4);
         }
     | IF expression THEN matched_statement ELSE unmatched_statement     
         {
             /* Check that expression is BOOLEAN */
+            // eval_type($2);
+            // if (super_type($2) != BOOL) {
+            //     yyerror("Using non-boolean expression in conditional statment");
+            // }
+
+            check_bool($2);
             $$ = mktree(IF, $2, mktree(THEN, $4, $6));
         }
     ;
@@ -270,8 +302,12 @@ variable:
     | ID '[' expression ']'
         {
             /* Array access */
-            /* Check that expression is of type INTEGER */ 
-            
+            /* Check that expression is of type INTEGER */
+            eval_type($3);
+            if (super_type($3) != INTEGER){
+                yyerror("Array Access with non-integer type");
+            }
+
             $$ = mkid(scope_search_all(top_scope, $1)); 
         }
     ;
@@ -306,7 +342,15 @@ term:
 
 factor:
     ID                              { $$ = mkid(scope_search_all(top_scope, $1));}
-    | ID '[' expression ']'         { $$ = mktree(ARRAY_ACCESS, mkid(scope_search_all(top_scope, $1)), $3);}
+    | ID '[' expression ']'         
+        { 
+            eval_type($3);
+            if (super_type($3) != INTEGER){
+                yyerror("Array Access with non-integer type");
+            }
+
+            $$ = mktree(ARRAY_ACCESS, mkid(scope_search_all(top_scope, $1)), $3);
+        }
     | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }

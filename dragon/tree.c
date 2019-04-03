@@ -108,6 +108,90 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
     return root;
 }
 
+/* Type Stuff */
+int super_type(tree_t *node) {return node->type->super_type;}
+
+int child_types_match(tree_t *root){
+    return (super_type(root->left) == super_type(root->right));
+}
+
+void check_bool(tree_t *root){
+    eval_type(root);
+    if (super_type(root) != BOOL) {
+        yyerror("Using non-boolean expression in conditional statment");
+    }
+}
+
+/* Recusively sets the type->super_type for nodes in the syntax tree. */
+void eval_type(tree_t *root){
+    if (root == NULL) return;
+    // fprintf(stderr, "TYPE: %d\n", root->type->tree_node_type);
+    switch (root->type->tree_node_type){
+        case ID:
+            /* set super_type of ID to the symbol table entry */
+            root->type->super_type = root->attribute.sval->type;
+            break;
+        case RELOP:
+            /*
+             * Check that both children are same type.
+             * If so, return bool.
+             * Else, return error.
+             */
+            eval_type(root->left);
+            eval_type(root->right);
+            
+            if (child_types_match(root)) root->type->super_type = BOOL;
+            else root->type->super_type = ERROR;
+
+            break;
+        case ADDOP:
+        case MULOP:
+            /* --ADDOP MULOP--
+             * Check that both children are same type.
+             * If so, return that type.
+             * Else, return error.
+             */
+
+            eval_type(root->left);
+            eval_type(root->right);
+
+            if (child_types_match(root)) {
+                // fprintf(stderr, "MATCH\n");
+                root->type->super_type = super_type(root->left);
+            }
+            else{
+                // fprintf(stderr, "ERROR\n");
+                root->type->super_type = ERROR;
+            }
+
+            break;
+        case INUM:
+            /* return INTEGER */
+            root->type->super_type = INTEGER;
+            break;
+        case RNUM:
+            /* return REAL */
+            root->type->super_type = REAL;
+            break;
+        case NOT:
+            /*
+             * check if child is type bool.
+             * If so, return bool.
+             * Else, error.
+            */
+            eval_type(root->left);
+            if (super_type(root->left) == BOOL) root->type->super_type = BOOL;
+            else root->type->super_type = ERROR;
+            
+            break;
+
+        default:
+            break;
+    }
+
+    return;
+}
+
 tree_t *update_type(tree_t *node, tree_t *type_node){
     /* type is a node whose attribute equals the type */
 
