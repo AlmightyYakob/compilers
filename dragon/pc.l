@@ -71,15 +71,15 @@ comment2 \(\*.*\*\)     /* Should probably be fixed, includes anything between o
 {ident}                 { if (DEBUG) fprintf(stderr, "[ID:%s]", yytext); yylval.sval = strdup(yytext); return ID; }
 
 ";"                     { return yytext[0]; }
-"\n"                    { if (DEBUG) fprintf(stderr, "\n"); CURRENT_LINE_NUM++; /* Add line counting here */ }
+"\n"                    { if (DEBUG) fprintf(stderr, "\n"); ++CURRENT_LINE_NUM; }
 .                       { if (DEBUG) fprintf(stderr, "{%c}", yytext[0]); return yytext[0]; }
 
 
 %%
 
 int yyerror (char *msg) {
-    fprintf(stderr, "\nError: %s\n", msg);
     // fprintf(stderr, "Error at string \"%s\"\n", yytext);
+    fprintf(stderr, "\nError: line %d: %s\n", CURRENT_LINE_NUM, msg);
     exit(1);
 }
 

@@ -234,6 +234,8 @@ matched_statement:
     | variable ASSIGNOP expression
         {
             /* Check that variable and expression are the same type */
+            /* Add check for functions not updating non-local variables */
+
             eval_type($1);
             eval_type($3);
             if (super_type($1) != super_type($3)){
@@ -303,6 +305,7 @@ variable:
         {
             /* Array access */
             /* Check that expression is of type INTEGER */
+
             eval_type($3);
             if (super_type($3) != INTEGER){
                 yyerror("Array Access with non-integer type");
@@ -351,7 +354,13 @@ factor:
 
             $$ = mktree(ARRAY_ACCESS, mkid(scope_search_all(top_scope, $1)), $3);
         }
-    | ID '(' expression_list ')'    { $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
+    | ID '(' expression_list ')'
+        {
+            /* Check that types of expression_list matches the types in func declaration */
+            /* Set super_type of this node to be return type of func */
+            $$->type->super_type = scope_search_all(top_scope, $1)->type;
+            $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
+        }
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
     | '(' expression ')'            { $$ = $2;}
@@ -370,7 +379,7 @@ sign
 %%
 
 scope_t *top_scope;
-int CURRENT_LINE_NUM;
+int CURRENT_LINE_NUM = 1;
 
 int main() {
     top_scope = mkscope();
