@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "scope.h"
 
 int hashpjw( char *s );
@@ -16,8 +17,8 @@ scope_t *mkscope(){
 
     // scope_insert(p, "input");
     // scope_insert(p, "output");
-    // scope_insert(p, "read");
-    // scope_insert(p, "write");
+    scope_insert(p, "read");
+    scope_insert(p, "write");
 
     return p;
 }
@@ -44,6 +45,7 @@ scope_t *pop_scope(scope_t *top){
 /* Helpers */
 node_t *scope_search(scope_t *top, char *name){
     // fprintf(stderr, "LOOK FOR %s\n", name);
+
     int index = hashpjw(name);
     node_t *tmp = top->table[index];
     return node_search(tmp, name);

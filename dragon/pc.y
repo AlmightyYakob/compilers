@@ -92,7 +92,7 @@ extern scope_t *top_scope;
 %type <tval> term;
 %type <tval> factor;
 
-//%type <ival> sign;
+%type <tval> sign;
 
 %%
 
@@ -116,7 +116,7 @@ identifier_list:
         }
         $$ = mkid(scope_insert(top_scope, $1));
     }
-    | identifier_list ',' ID    
+    | identifier_list ',' ID
         {
             if (scope_search(top_scope, $3) != NULL) {
                 yyerror("ID defined twice");
@@ -333,7 +333,7 @@ expression:
 simple_expression:
     /* Here, need to check type of all children, to ensure matching */
     term                                { $$ = $1; }
-    /* | sign term                      { $$ = mkop(ADDOP, $?, 0, $2); } */
+    | sign term                         { $$ = mkop(MULOP, STAR, $1, $2); }
     | simple_expression ADDOP term      { $$ = mkop(ADDOP, $2, $1, $3); }
     ;
     /* issue here, sign should be lower than ADDOP */
@@ -368,12 +368,12 @@ factor:
     ;
 
 /* Not sure what to do with sign */
-/* 
+
 sign
-    : '+' {$$ =  1;}
-    | '-' {$$ = -1;}
+    : '+' {$$ =  mkinum(1); }
+    | '-' {$$ =  mkinum(-1); }
     ;
- */
+
 
 
 %%
