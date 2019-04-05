@@ -258,6 +258,21 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
     return node;
 }
 
+void add_args_to_func(node_t *func_node, tree_t *arg_list){
+    /* arg_list LISTOP extends to the left child */
+
+    func_node->func_arguments = malloc(sizeof(arg_node_t));
+    arg_node_t *curr_node = func_node->func_arguments;
+    
+    while(curr_node != NULL){
+        // curr_node->entry = arg_list->right-> something else
+        // curr_node->next = malloc(sizeof(arg_node_t));
+        //curr_node = curr_node->next;
+    }
+}
+
+
+/* TREE PRINT */
 void tree_print(tree_t *t){
     fprintf(stderr, "\n---BEGIN PRINT TREE---\n");
     aux_tree_print(t, 0);

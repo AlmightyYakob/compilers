@@ -14,7 +14,6 @@ typedef struct type_s {
 
 } type_t;
 
-// void eval_type(tree_t *root);
 
 
 #endif

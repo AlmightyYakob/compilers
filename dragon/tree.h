@@ -44,6 +44,8 @@ int child_types_match(tree_t *root);
 void eval_type(tree_t *root);
 void check_bool(tree_t *root);
 
+void add_args_to_func(node_t *func_node, tree_t *arg_list);
+
 /* Auxiliary */
 void tree_print(tree_t *);
 
