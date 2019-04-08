@@ -273,10 +273,6 @@ unmatched_statement:
       IF expression THEN statement                                      
         {   
             /* Check that expression is BOOLEAN */
-            // eval_type($2);
-            // if (super_type($2) != BOOL) {
-            //     yyerror("Using non-boolean expression in conditional statment");
-            // }
 
             check_bool($2);
             $$ = mktree(IF, $2, $4);
@@ -284,10 +280,6 @@ unmatched_statement:
     | IF expression THEN matched_statement ELSE unmatched_statement     
         {
             /* Check that expression is BOOLEAN */
-            // eval_type($2);
-            // if (super_type($2) != BOOL) {
-            //     yyerror("Using non-boolean expression in conditional statment");
-            // }
 
             check_bool($2);
             $$ = mktree(IF, $2, mktree(THEN, $4, $6));
@@ -344,9 +336,10 @@ term:
     ;
 
 factor:
-    ID                              { $$ = mkid(scope_search_all(top_scope, $1));}
-    | ID '[' expression ']'         
-        { 
+    ID                              
+        { $$ = mkid(scope_search_all(top_scope, $1)); }
+    | ID '[' expression ']'
+        {
             eval_type($3);
             if (super_type($3) != INTEGER){
                 yyerror("Array Access with non-integer type");
@@ -358,6 +351,7 @@ factor:
         {
             /* Check that types of expression_list matches the types in func declaration */
             /* Set super_type of this node to be return type of func */
+            
             $$->type->super_type = scope_search_all(top_scope, $1)->type;
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
         }

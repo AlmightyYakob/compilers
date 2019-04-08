@@ -258,17 +258,53 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
     return node;
 }
 
+/*
+ * Creates linked list of arg_node_t entries, rooted at func_node, 
+ * which represents the argument structure of the passed func_node.
+*/
 void add_args_to_func(node_t *func_node, tree_t *arg_list){
-    /* arg_list LISTOP extends to the left child */
+    /*
+        SHOULD NEVER MALLOC/FREE WITH ARG_LIST
 
-    func_node->func_arguments = malloc(sizeof(arg_node_t));
-    arg_node_t *curr_node = func_node->func_arguments;
-    
-    while(curr_node != NULL){
-        // curr_node->entry = arg_list->right-> something else
-        // curr_node->next = malloc(sizeof(arg_node_t));
-        //curr_node = curr_node->next;
+        arg_list LISTOP is in left child, 
+        picked off item is in right child.
+
+        Each leaf node should be an ID
+    */
+
+    if (arg_list == NULL) {
+        func_node->func_arguments = NULL;
+        return;
     }
+
+    arg_node_t *curr_node     = malloc(sizeof(arg_node_t));
+    tree_t     *curr_arg      = arg_list;
+
+    func_node->func_arguments = curr_node;
+    while(curr_arg != NULL){
+        /*
+         * Cases for each node are:
+         *  right child is ID 
+         *  left child is LISTOP or ID
+         *  curr_node is an ID 
+         */
+        
+        curr_node->entry = curr_arg->right->attribute.sval;
+        if (curr_arg->left != NULL){
+            curr_node->next = malloc(sizeof(arg_node_t));
+            curr_node = curr_node->next;
+        }
+        else if (curr_arg->left->type->tree_node_type == ID){
+            curr_node->entry = curr_arg->left->attribute.sval;
+            curr_node->next = NULL;
+            // curr_node = curr_node->next;
+            break;
+        }
+
+        curr_arg = curr_arg->left;
+    }
+
+    /* END? */
 }
 
 
