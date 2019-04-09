@@ -1,6 +1,8 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "type.h"
+
 struct node_s;
 struct arg_node_s;
 
@@ -18,7 +20,7 @@ typedef struct node_s {
 } node_t;
 
 typedef struct arg_node_s {
-    node_t *entry;
+    type_t type;
     struct arg_node_s *next;
 
 } arg_node_t;

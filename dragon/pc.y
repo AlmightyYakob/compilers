@@ -174,11 +174,11 @@ subprogram_head:
             top_scope = push_scope(top_scope);
     } arguments ':' maybe_result standard_type ';' { 
             /* push new scope and update type info of ID */
-            node_t *func_id_node = scope_search_all(top_scope, $2);
-            $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
 
+            node_t *func_id_node = scope_search_all(top_scope, $2);
             add_args_to_func(func_id_node, $4);
-            // print_args(func_id_node);
+            
+            $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
     }
     | PROCEDURE ID {
         if (scope_search(top_scope, $2) != NULL) {

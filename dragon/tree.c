@@ -291,14 +291,14 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
          *  curr_node is an ID, both children NULL
          */
         
-        curr_node->entry = curr_arg->right->attribute.sval;
+        curr_node->type.super_type = curr_arg->right->attribute.sval->type;
         if (curr_arg->left != NULL){
             curr_node->next = malloc(sizeof(arg_node_t));
             curr_node = curr_node->next;
         }
 
         if (tree_node_type(curr_arg->left) == ID){
-            curr_node->entry = curr_arg->left->attribute.sval;
+            curr_node->type.super_type = curr_arg->left->attribute.sval->type;
             curr_node->next = NULL;
             // curr_node = curr_node->next;
             break;
@@ -315,7 +315,8 @@ void print_args(node_t *func_node){
     arg_node_t *curr_node = func_node->func_arguments;
 
     while(curr_node != NULL){
-        fprintf(stderr, "%s\n", curr_node->entry->name);
+        // fprintf(stderr, "%s\n", curr_node->entry->name);
+        fprintf(stderr, "%d\n", curr_node->type.super_type);
         curr_node = curr_node->next;
     }
     fprintf(stderr, "END PRINT ARGUMENTS FOR: %s\n", func_node->name);
@@ -356,7 +357,7 @@ int verify_args(node_t *func_node, tree_t *arg_list){
         else if (tree_node_type(curr_arg) != LISTOP){
             fprintf(stderr, "CASE 2\n");
             eval_type(curr_arg);
-            if (super_type(curr_arg) == curr_node->entry->type){
+            if (super_type(curr_arg) == curr_node->type.super_type){
                 if (curr_node->next != NULL) correct = 0;
             }
             else correct = 0;
@@ -370,7 +371,7 @@ int verify_args(node_t *func_node, tree_t *arg_list){
             fprintf(stderr, "CASE 3\n");
             eval_type(curr_arg->right);
 
-            if (super_type(curr_arg->right) == curr_node->entry->type){
+            if (super_type(curr_arg->right) == curr_node->type.super_type){
                 curr_node = curr_node->next;
                 curr_arg = curr_arg->left;
             }
@@ -383,17 +384,21 @@ int verify_args(node_t *func_node, tree_t *arg_list){
         /* Case 4 */
         else {
             fprintf(stderr, "CASE 4\n");
+            // fprintf(stderr, "curr_node == %s\n", curr_node->entry->name);
+            
+            // if (scope_search_all(top_scope, curr_node->entry->name) == NULL) fprintf(stderr, "scope_search_all == NULL\n");
+
             eval_type(curr_arg->left);
             eval_type(curr_arg->right);
 
-            if (super_type(curr_arg->right) == curr_node->entry->type) curr_node = curr_node->next;
+            if (super_type(curr_arg->right) == curr_node->type.super_type) curr_node = curr_node->next;
             else {
                 correct = 0;
                 break;
             }
             
             if (curr_node == NULL) correct = 0;
-            else if (super_type(curr_arg->left) != curr_node->entry->type) correct = 0;
+            else if (super_type(curr_arg->left) != curr_node->type.super_type) correct = 0;
 
             /* Always break because no more LISTOP */
             break;
