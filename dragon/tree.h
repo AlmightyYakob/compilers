@@ -49,6 +49,9 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list);
 int verify_args(node_t *func_node, tree_t *arg_list);
 void print_args(node_t *func_node);
 
+int exists_return_statement(tree_t *node, tree_t *func_id);
+int exists_nonlocal_assign(tree_t *node, tree_t *func_id);
+
 /* Auxiliary */
 void tree_print(tree_t *);
 

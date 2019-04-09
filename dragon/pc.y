@@ -157,9 +157,35 @@ subprogram_declaration:
     compound_statement
 		{ 
             $$ = mksubprog($1, $2, $3, $4);
+            
+            /*
+                Check for return statement if function,
+                Check for lack thereof if a procedure
+
+                ($4, $1->left)
+             */
+            
+            if ($1->type->tree_node_type == FUNCTION){
+                if (!exists_return_statement($4, $1->left)){
+                    yyerror("Missing function return statement");
+                }
+
+                /* Check for non-local assigns */
+                if (exists_nonlocal_assign($4, $1->left) == 1){
+                    yyerror("Assignment to non-local variable in function body");
+                }
+            }
+            else if ($1->type->tree_node_type == PROCEDURE) {
+                if (exists_return_statement($4, $1->left)){
+                    yyerror("Illegal procedure return statement");
+                }
+            }
+
             /* pop current scope */ 
             fprintf(stderr, "-----------POP--------\n");
             top_scope = pop_scope(top_scope);
+
+
         }
     ;
 
@@ -177,7 +203,7 @@ subprogram_head:
 
             node_t *func_id_node = scope_search_all(top_scope, $2);
             add_args_to_func(func_id_node, $4);
-            
+
             $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
     }
     | PROCEDURE ID {
@@ -306,6 +332,7 @@ variable:
                 yyerror("Array Access with non-integer type");
             }
 
+            /* maybe needs to be updated, to include expression? */
             $$ = mkid(scope_search_all(top_scope, $1)); 
         }
     ;
@@ -355,6 +382,13 @@ factor:
             /* Check that types of expression_list matches the types in func declaration */
             /* Set super_type of this node to be return type of func */
             
+            /* Check that ID is a function, not a procedure */
+            /* Checking that type is -1 isn't exactly correct */
+            if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type == -1){
+                yyerror("Procedure used as factor in expression (procedures can't return values)");
+            }
+
+            /* Verify that parameters are correct in order and type */
             if (!verify_args(scope_search_all(top_scope, $1), $3)) {
                 yyerror("Incorrect parameters to function call");
             }

@@ -272,7 +272,6 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
 
         Each leaf node should be an ID
     */
-
     if (arg_list == NULL) {
         func_node->func_arguments = NULL;
         return;
@@ -291,17 +290,24 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
          *  curr_node is an ID, both children NULL
          */
         
-        curr_node->type.super_type = curr_arg->right->attribute.sval->type;
+        if (curr_arg->type->tree_node_type == ID){
+            curr_node->type.super_type = curr_arg->attribute.sval->type;
+            curr_node->next = NULL;
+            break;
+        }
+        else curr_node->type.super_type = curr_arg->right->attribute.sval->type;
+
         if (curr_arg->left != NULL){
             curr_node->next = malloc(sizeof(arg_node_t));
             curr_node = curr_node->next;
-        }
 
-        if (tree_node_type(curr_arg->left) == ID){
-            curr_node->type.super_type = curr_arg->left->attribute.sval->type;
-            curr_node->next = NULL;
-            // curr_node = curr_node->next;
-            break;
+            /* shouldn't be needed, cuz of ID base case above */
+            // if (tree_node_type(curr_arg->left) == ID){
+            //     curr_node->type.super_type = curr_arg->left->attribute.sval->type;
+            //     curr_node->next = NULL;
+            //     // curr_node = curr_node->next;
+            //     break;
+            // }
         }
         
         curr_arg = curr_arg->left;
@@ -338,7 +344,6 @@ int verify_args(node_t *func_node, tree_t *arg_list){
      * 3. curr_node is LISTOP, right child is expr, left child is LISTOP
      * 4. curr_node is LISTOP, right child is expr, left child is expr
      */
-    
     arg_node_t *curr_node     = func_node->func_arguments;
     tree_t     *curr_arg      = arg_list;
     int correct = 1;
@@ -406,6 +411,54 @@ int verify_args(node_t *func_node, tree_t *arg_list){
     }
 
     return correct;
+}
+
+/* Check if there's an ASSIGNOP statement, with left child being the var referenced by func_id */
+/* Returns 1 if it is found, and 0 if not */
+int exists_return_statement(tree_t *node, tree_t *func_id){
+    /* func_id is a tree with type ID */
+    /* SYMBOL TABLE ENTRY FOR func_id SHOULD BE STILL VALID */
+
+
+    if (node == NULL) return 0;
+    // fprintf(stderr, "TYPE IS %d\n", node->type->tree_node_type);
+    if (node->type->tree_node_type == ASSIGNOP){
+        /* Left child has to be an ID */
+        // fprintf(stderr, "ASSIGNOP\n");
+
+        if (node->left->attribute.sval == func_id->attribute.sval){
+            /* Assignemnt to func_id */
+            return 1;
+        }
+        else return 0;
+    }
+    else {
+        return exists_return_statement(node->left, func_id) || exists_return_statement(node->right, func_id); 
+    }
+
+}
+
+int exists_nonlocal_assign(tree_t *node, tree_t *func_id){
+    /* func_id is a tree with type ID */
+    /* SYMBOL TABLE ENTRY FOR func_id SHOULD BE STILL VALID */
+
+    if (node == NULL) return 0;
+    if (node->type->tree_node_type == ASSIGNOP){
+        /* Left child has to be an ID */
+        
+        if (scope_search(top_scope, node->left->attribute.sval->name) == NULL){
+            /* Checks if the non-local assignment is really just the return statement */
+            if (!exists_return_statement(node, func_id)){
+                /* NON-LOCAL ASSIGNMENT */
+                fprintf(stderr, "%s is NON_LOCAL\n", node->left->attribute.sval->name);
+                return 1;
+            }
+        }
+        return 0;
+    }
+    else {
+        return exists_nonlocal_assign(node->left, func_id) || exists_nonlocal_assign(node->right, func_id); 
+    }
 }
 
 /* TREE PRINT */
