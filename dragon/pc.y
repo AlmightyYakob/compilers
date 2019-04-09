@@ -168,6 +168,7 @@ subprogram_head:
             if (scope_search(top_scope, $2) != NULL) {
                 yyerror("Function ID defined twice");
             }
+            
             node_t *func_id = scope_insert(top_scope, $2);
             fprintf(stderr, "-----------PUSH--------\n");
             top_scope = push_scope(top_scope);
@@ -175,6 +176,8 @@ subprogram_head:
             /* push new scope and update type info of ID */
             node_t *func_id_node = scope_search_all(top_scope, $2);
             $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
+
+            // add_args_to_func(func_id_node, $4);
     }
     | PROCEDURE ID {
         if (scope_search(top_scope, $2) != NULL) {
@@ -235,7 +238,6 @@ matched_statement:
         {
             /* Check that variable and expression are the same type */
             /* Add check for functions not updating non-local variables */
-
             eval_type($1);
             eval_type($3);
             if (super_type($1) != super_type($3)){
@@ -352,8 +354,10 @@ factor:
             /* Check that types of expression_list matches the types in func declaration */
             /* Set super_type of this node to be return type of func */
             
-            $$->type->super_type = scope_search_all(top_scope, $1)->type;
+            // fprintf(stderr, "VERIFY_ARGS == %d\n", verify_args(scope_search_all(top_scope, $1), $3));
+            
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
+            $$->type->super_type = scope_search_all(top_scope, $1)->type;
         }
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }

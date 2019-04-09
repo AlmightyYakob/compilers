@@ -110,6 +110,7 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
 
 /* Type Stuff */
 int super_type(tree_t *node) {return node->type->super_type;}
+int tree_node_type(tree_t *node) {return node->type->tree_node_type;}
 
 int child_types_match(tree_t *root){
     return (super_type(root->left) == super_type(root->right));
@@ -284,9 +285,10 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
     while(curr_arg != NULL){
         /*
          * Cases for each node are:
-         *  right child is ID 
-         *  left child is LISTOP or ID
-         *  curr_node is an ID 
+         *  arg_list is NULL
+         *  right child is ID, left child is LISTOP
+         *  right child is ID, left child is ID
+         *  curr_node is an ID, both children NULL
          */
         
         curr_node->entry = curr_arg->right->attribute.sval;
@@ -307,6 +309,86 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
     /* END? */
 }
 
+/**
+ * Verifies that arg_list matches the format of func_node->func_arguments.
+ * Returns 1 if arg_list is of the correct types and length.
+ * Returns 0 otherwise.
+*/
+int verify_args(node_t *func_node, tree_t *arg_list){
+    /**
+     * arg_list is expression list
+     * NEVER DESCEND INTO CHILD OF AN A NON LISTOP NODE
+     * 
+     * Cases for each arg node are:
+     * 1. curr_node is NULL
+     * 2. curr_node is expr (not LISTOP)
+     * 3. curr_node is LISTOP, right child is expr, left child is LISTOP
+     * 4. curr_node is LISTOP, right child is expr, left child is expr
+     */
+        
+    arg_node_t *curr_node     = func_node->func_arguments;
+    tree_t     *curr_arg      = arg_list;
+    int correct = 1;
+    while(correct){
+        if (curr_node == NULL) fprintf(stderr, "curr_node == NULL\n");
+        if (curr_arg == NULL) fprintf(stderr, "curr_arg == NULL\n");
+
+        /* Case 1 */
+        if (curr_node == NULL && curr_arg == NULL) break;
+        if (curr_node == NULL || curr_arg == NULL) {
+            correct = 0;
+            break;
+        }
+
+        /* Case 2 */
+        else if (tree_node_type(curr_arg) != LISTOP){
+            fprintf(stderr, "CASE 2\n");
+            eval_type(curr_arg);
+            if (super_type(curr_arg) == curr_node->entry->type){
+                if (curr_node->next != NULL) correct = 0;
+            }
+            else correct = 0;
+
+            /* Always break because its the end of expr_list */
+            break;
+        }
+        
+        /* Case 3 */
+        else if (tree_node_type(curr_arg->left) == LISTOP){
+            fprintf(stderr, "CASE 3\n");
+            eval_type(curr_arg->right);
+
+            if (super_type(curr_arg->right) == curr_node->entry->type){
+                curr_node = curr_node->next;
+                curr_arg = curr_arg->left;
+            }
+            else{
+                correct = 0;
+                break;
+            }
+        }
+
+        /* Case 4 */
+        else {
+            fprintf(stderr, "CASE 4\n");
+            eval_type(curr_arg->left);
+            eval_type(curr_arg->right);
+
+            if (super_type(curr_arg->right) == curr_node->entry->type) curr_node = curr_node->next;
+            else {
+                correct = 0;
+                break;
+            }
+
+            if (super_type(curr_arg->left) != curr_node->entry->type) correct = 0;
+
+            /* Always break because no more LISTOP */
+            break;
+        }
+    }
+
+    return correct;
+}
 
 /* TREE PRINT */
 void tree_print(tree_t *t){

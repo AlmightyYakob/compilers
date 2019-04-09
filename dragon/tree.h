@@ -40,11 +40,13 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
 
 /* Type Stuff */
 int super_type(tree_t *node);
+int tree_node_type(tree_t *node);
 int child_types_match(tree_t *root);
 void eval_type(tree_t *root);
 void check_bool(tree_t *root);
 
 void add_args_to_func(node_t *func_node, tree_t *arg_list);
+int verify_args(node_t *func_node, tree_t *arg_list);
 
 /* Auxiliary */
 void tree_print(tree_t *);
