@@ -60,8 +60,8 @@ tree_t *mksubprog(tree_t *subprog_head, tree_t *decls, tree_t *subprog_decls, tr
 tree_t *mkid(node_t *name_ptr) {
     if (name_ptr == NULL) {
         yyerror("ID NOT FOUND");
-        // return NULL;
     }
+
     tree_t *p = mktree(ID, NULL, NULL);
     p->attribute.sval = name_ptr;
     return p;
@@ -296,17 +296,29 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
             curr_node->next = malloc(sizeof(arg_node_t));
             curr_node = curr_node->next;
         }
-        else if (curr_arg->left->type->tree_node_type == ID){
+
+        if (tree_node_type(curr_arg->left) == ID){
             curr_node->entry = curr_arg->left->attribute.sval;
             curr_node->next = NULL;
             // curr_node = curr_node->next;
             break;
         }
-
+        
         curr_arg = curr_arg->left;
     }
 
     /* END? */
+}
+
+void print_args(node_t *func_node){
+    fprintf(stderr, "BEGIN PRINT ARGUMENTS FOR: %s\n", func_node->name);
+    arg_node_t *curr_node = func_node->func_arguments;
+
+    while(curr_node != NULL){
+        fprintf(stderr, "%s\n", curr_node->entry->name);
+        curr_node = curr_node->next;
+    }
+    fprintf(stderr, "END PRINT ARGUMENTS FOR: %s\n", func_node->name);
 }
 
 /**
@@ -325,7 +337,7 @@ int verify_args(node_t *func_node, tree_t *arg_list){
      * 3. curr_node is LISTOP, right child is expr, left child is LISTOP
      * 4. curr_node is LISTOP, right child is expr, left child is expr
      */
-        
+    
     arg_node_t *curr_node     = func_node->func_arguments;
     tree_t     *curr_arg      = arg_list;
     int correct = 1;
@@ -379,8 +391,9 @@ int verify_args(node_t *func_node, tree_t *arg_list){
                 correct = 0;
                 break;
             }
-
-            if (super_type(curr_arg->left) != curr_node->entry->type) correct = 0;
+            
+            if (curr_node == NULL) correct = 0;
+            else if (super_type(curr_arg->left) != curr_node->entry->type) correct = 0;
 
             /* Always break because no more LISTOP */
             break;
@@ -394,6 +407,7 @@ int verify_args(node_t *func_node, tree_t *arg_list){
 void tree_print(tree_t *t){
     fprintf(stderr, "\n---BEGIN PRINT TREE---\n");
     aux_tree_print(t, 0);
+    fprintf(stderr, "\n---END PRINT TREE---\n");
 }
 
 void aux_tree_print(tree_t *t, int spaces){

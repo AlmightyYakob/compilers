@@ -47,6 +47,7 @@ void check_bool(tree_t *root);
 
 void add_args_to_func(node_t *func_node, tree_t *arg_list);
 int verify_args(node_t *func_node, tree_t *arg_list);
+void print_args(node_t *func_node);
 
 /* Auxiliary */
 void tree_print(tree_t *);

@@ -177,7 +177,8 @@ subprogram_head:
             node_t *func_id_node = scope_search_all(top_scope, $2);
             $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
 
-            // add_args_to_func(func_id_node, $4);
+            add_args_to_func(func_id_node, $4);
+            // print_args(func_id_node);
     }
     | PROCEDURE ID {
         if (scope_search(top_scope, $2) != NULL) {
@@ -273,7 +274,7 @@ matched_statement:
 
 unmatched_statement:
       IF expression THEN statement                                      
-        {   
+        {
             /* Check that expression is BOOLEAN */
 
             check_bool($2);
@@ -354,7 +355,9 @@ factor:
             /* Check that types of expression_list matches the types in func declaration */
             /* Set super_type of this node to be return type of func */
             
-            // fprintf(stderr, "VERIFY_ARGS == %d\n", verify_args(scope_search_all(top_scope, $1), $3));
+            if (!verify_args(scope_search_all(top_scope, $1), $3)) {
+                yyerror("Incorrect parameters to function call");
+            }
             
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
             $$->type->super_type = scope_search_all(top_scope, $1)->type;
