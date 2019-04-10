@@ -180,6 +180,9 @@ subprogram_declaration:
                     yyerror("Illegal procedure return statement");
                 }
             }
+            else {
+                /* This should literally never happen */
+            }
 
             /* pop current scope */ 
             fprintf(stderr, "-----------POP--------\n");
@@ -214,7 +217,9 @@ subprogram_head:
         fprintf(stderr, "-----------PUSH--------\n");
         top_scope = push_scope(top_scope);
     } arguments ';' {
+
         node_t *proc_id_node = scope_search_all(top_scope, $2);
+        add_args_to_func(proc_id_node, $4);
         $$ = mktree(PROCEDURE, mkid(proc_id_node), $4);
     }
     ;
@@ -339,7 +344,15 @@ variable:
 
 procedure_statement:
       ID                            {$$ = mkid(scope_search_all(top_scope, $1));}
-    | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
+    | ID '(' expression_list ')'    
+        {
+            /* Verify that parameters are correct in order and type */
+            if (!verify_args(scope_search_all(top_scope, $1), $3)) {
+                yyerror("Incorrect parameters to function call");
+            }
+
+            $$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);
+        }
     ;
 
 expression_list:
