@@ -14,12 +14,6 @@ scope_t *mkscope(){
     for (int i=0; i < HASH_SIZE; i++) (p->table)[i] = NULL;
 
     p->next = NULL;
-
-    // scope_insert(p, "input");
-    // scope_insert(p, "output");
-    scope_insert(p, "read");
-    scope_insert(p, "write");
-
     return p;
 }
 

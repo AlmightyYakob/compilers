@@ -9,6 +9,9 @@
 
 extern int yyerror (char *);
 extern scope_t *top_scope;
+extern node_t *BUILTIN_READ;
+extern node_t *BUILTIN_WRITE;
+
 void aux_tree_print(tree_t *t, int spaces);
 
 
@@ -127,9 +130,13 @@ void check_bool(tree_t *root){
 void eval_type(tree_t *root){
     if (root == NULL) return;
     // fprintf(stderr, "TYPE: %d\n", root->type->tree_node_type);
+    // fprintf(stderr, "vv EVALUATING %d\n", root->type->tree_node_type);
+    // tree_print(root);
+
     switch (root->type->tree_node_type){
         case ID:
             /* set super_type of ID to the symbol table entry */
+            // fprintf(stderr, "ID->name == %s\n", root->attribute.sval->name);
             root->type->super_type = root->attribute.sval->type;
             break;
         case RELOP:
@@ -162,6 +169,11 @@ void eval_type(tree_t *root){
             }
             else{
                 // fprintf(stderr, "ERROR\n");
+                // fprintf(stderr, "LEFT CHILD TYPE == %d\n", super_type(root->left));
+                // fprintf(stderr, "RIGHT CHILD TYPE == %d\n", super_type(root->right));
+                // fprintf(stderr, "LEFT CHILD TREE TYPE == %d\n", tree_node_type(root->left));
+                // fprintf(stderr, "RIGHT CHILD TREE TYPE == %d\n", tree_node_type(root->right));
+
                 root->type->super_type = ERROR;
             }
 
@@ -174,6 +186,30 @@ void eval_type(tree_t *root){
             /* return REAL */
             root->type->super_type = REAL;
             break;
+        case ARRAY_ACCESS:
+            eval_type(root->left);
+            eval_type(root->right);
+
+            // fprintf(stderr, "ARRAY ACCESS\n");
+            // fprintf(stderr, "LEFT CHILD TYPE == %d\n", super_type(root->left));
+            // fprintf(stderr, "RIGHT CHILD TYPE == %d\n", super_type(root->right));
+            // fprintf(stderr, "LEFT CHILD TREE TYPE == %d\n", tree_node_type(root->left));
+            // fprintf(stderr, "RIGHT CHILD TREE TYPE == %d\n", tree_node_type(root->right));
+
+            root->type->super_type = super_type(root->left);
+
+            break;
+        case FUNCTION_CALL:
+        case PROCEDURE_CALL:
+            eval_type(root->left);
+            eval_type(root->right);
+            root->type->super_type == root->left->type->super_type;
+            break;
+
+        case LISTOP:
+            eval_type(root->left);
+            eval_type(root->right);
+            break;
         case NOT:
             /*
              * check if child is type bool.
@@ -181,12 +217,14 @@ void eval_type(tree_t *root){
              * Else, error.
             */
             eval_type(root->left);
+            fprintf(stderr, "NOT\n");
             if (super_type(root->left) == BOOL) root->type->super_type = BOOL;
             else root->type->super_type = ERROR;
             
             break;
 
         default:
+            fprintf(stderr, "BASE CASE IN EVAL_TYPE == %d\n", root->type->tree_node_type);
             break;
     }
 
@@ -199,8 +237,9 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
     if (type_node == NULL || node == NULL) return node;
 
     tree_t *p = node;
-    
+    int isArray = 0;
     int type;
+
     switch (type_node->type->tree_node_type)
     {
         case INTEGER:
@@ -212,7 +251,13 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
         
         case ARRAY:
             /* change this case later*/
-            type = ARRAY;
+            // type = ARRAY;
+            // type = FOR;
+
+            /* Where the type lives in an array type tree */
+            type = type_node->right->type->tree_node_type;
+            
+            isArray = 1;
             break;
             
         default:
@@ -272,6 +317,7 @@ void add_args_to_func(node_t *func_node, tree_t *arg_list){
 
         Each leaf node should be an ID
     */
+
     if (arg_list == NULL) {
         func_node->func_arguments = NULL;
         return;
@@ -344,6 +390,11 @@ int verify_args(node_t *func_node, tree_t *arg_list){
      * 3. curr_node is LISTOP, right child is expr, left child is LISTOP
      * 4. curr_node is LISTOP, right child is expr, left child is expr
      */
+
+    /* TEMPORARY FOR READ AND WRITE */
+    if (func_node == BUILTIN_READ || func_node == BUILTIN_WRITE) return 1;
+
+
     arg_node_t *curr_node     = func_node->func_arguments;
     tree_t     *curr_arg      = arg_list;
     int correct = 1;

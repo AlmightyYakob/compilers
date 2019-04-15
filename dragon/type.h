@@ -4,14 +4,8 @@
 typedef struct type_s {
     int tree_node_type;
     int super_type;
-
+    int array;
     
-    // struct type_s sub_type;
-
-    // union {
-    //     int expr_type; /* For expressions */
-    // } subtype;
-
 } type_t;
 
 

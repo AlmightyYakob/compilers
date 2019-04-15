@@ -33,6 +33,7 @@ extern scope_t *top_scope;
 %token PROCEDURE FUNCTION
 %token ARRAY OF
 %token INTEGER REAL
+%token ANY
 %token RESULT
 
 %token IF THEN ELSE
@@ -348,7 +349,7 @@ procedure_statement:
         {
             /* Verify that parameters are correct in order and type */
             if (!verify_args(scope_search_all(top_scope, $1), $3)) {
-                yyerror("Incorrect parameters to function call");
+                yyerror("Incorrect parameters to procedure call");
             }
 
             $$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);
@@ -402,9 +403,7 @@ factor:
             }
 
             /* Verify that parameters are correct in order and type */
-            if (!verify_args(scope_search_all(top_scope, $1), $3)) {
-                yyerror("Incorrect parameters to function call");
-            }
+            if (!verify_args(scope_search_all(top_scope, $1), $3)) yyerror("Incorrect parameters to function call");
             
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
             $$->type->super_type = scope_search_all(top_scope, $1)->type;
@@ -427,9 +426,19 @@ sign
 %%
 
 scope_t *top_scope;
+node_t *BUILTIN_READ;
+node_t *BUILTIN_WRITE;
 int CURRENT_LINE_NUM = 1;
 
 int main() {
     top_scope = mkscope();
+
+    /* Built-in functions */
+    BUILTIN_READ  = scope_insert(top_scope, "read");
+    BUILTIN_WRITE = scope_insert(top_scope, "write");
+
+    /* setup single argument for read and write, of any type */
+
+
     yyparse();
 }
