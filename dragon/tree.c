@@ -231,6 +231,7 @@ void eval_type(tree_t *root){
     return;
 }
 
+/* Function to update the types of entries in the symbol table */
 tree_t *update_type(tree_t *node, tree_t *type_node){
     /* type is a node whose attribute equals the type */
 
