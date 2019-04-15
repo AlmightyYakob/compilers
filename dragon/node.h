@@ -12,8 +12,8 @@ typedef struct node_s {
     struct node_s *next;
     
     /* Variable type */
-    int type;
-
+    // int type;
+    type_t type;
     /* Stores arguments for functions */
     struct arg_node_s *func_arguments;
     

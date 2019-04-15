@@ -80,7 +80,7 @@ void scope_print(scope_t *current_scope){
     for (i = 0; i < HASH_SIZE; i++){
         entry = current_scope->table[i];
         if (entry != NULL) 
-            fprintf(stderr, "# %s: %d\n", entry->name, entry->type);
+            fprintf(stderr, "# %s: %d\n", entry->name, entry->type.super_type);
     }
 
     fprintf(stderr, "----END PRINT SCOPE----\n");

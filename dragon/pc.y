@@ -166,7 +166,7 @@ subprogram_declaration:
                 ($4, $1->left)
              */
             
-            if ($1->type->tree_node_type == FUNCTION){
+            if ($1->type == FUNCTION){
                 if (!exists_return_statement($4, $1->left)){
                     yyerror("Missing function return statement");
                 }
@@ -176,7 +176,7 @@ subprogram_declaration:
                     yyerror("Assignment to non-local variable in function body");
                 }
             }
-            else if ($1->type->tree_node_type == PROCEDURE) {
+            else if ($1->type == PROCEDURE) {
                 if (exists_return_statement($4, $1->left)){
                     yyerror("Illegal procedure return statement");
                 }
@@ -271,9 +271,7 @@ matched_statement:
         {
             /* Check that variable and expression are the same type */
             /* Add check for functions not updating non-local variables */
-            eval_type($1);
-            eval_type($3);
-            if (super_type($1) != super_type($3)){
+            if (eval_type($1) != eval_type($3)){
                 yyerror("Mismatched types in assignment");
             }
 
@@ -292,11 +290,8 @@ matched_statement:
     | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
         {
             /* Check that types of variable? and both expressions match */
-            eval_type($2);
-            eval_type($4);
-            eval_type($6);
 
-            if (super_type($2) != super_type($4) || super_type($4) != super_type($6)){
+            if (eval_type($2) != eval_type($4) || eval_type($4) != eval_type($6)){
                 yyerror("Type mismatch in FOR expression");
             }
 
@@ -332,9 +327,14 @@ variable:
         {
             /* Array access */
             /* Check that expression is of type INTEGER */
+            if (scope_search_all(top_scope, $1) != NULL){
+                /* Check that ID is of type array */
+                if (!(scope_search_all(top_scope, $1)->type.array)) {
+                    yyerror("Indexing non-array variable");
+                }
+            }
 
-            eval_type($3);
-            if (super_type($3) != INTEGER){
+            if (eval_type($3) != INTEGER){
                 yyerror("Array Access with non-integer type");
             }
 
@@ -346,7 +346,7 @@ variable:
 procedure_statement:
       ID                            {$$ = mkid(scope_search_all(top_scope, $1));}
     | ID '(' expression_list ')'    
-        {
+        {   
             /* Verify that parameters are correct in order and type */
             if (!verify_args(scope_search_all(top_scope, $1), $3)) {
                 yyerror("Incorrect parameters to procedure call");
@@ -384,8 +384,14 @@ factor:
         { $$ = mkid(scope_search_all(top_scope, $1)); }
     | ID '[' expression ']'
         {
-            eval_type($3);
-            if (super_type($3) != INTEGER){
+            if (scope_search_all(top_scope, $1) != NULL){
+                /* Check that ID is of type array */
+                if (!(scope_search_all(top_scope, $1)->type.array)) {
+                    yyerror("Indexing non-array variable");
+                }
+            }
+
+            if (eval_type($3) != INTEGER){
                 yyerror("Array Access with non-integer type");
             }
 
@@ -398,7 +404,7 @@ factor:
             
             /* Check that ID is a function, not a procedure */
             /* Checking that type is -1 isn't exactly correct */
-            if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type == -1){
+            if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type.super_type == -1){
                 yyerror("Procedure used as factor in expression (procedures can't return values)");
             }
 
@@ -406,7 +412,7 @@ factor:
             if (!verify_args(scope_search_all(top_scope, $1), $3)) yyerror("Incorrect parameters to function call");
             
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
-            $$->type->super_type = scope_search_all(top_scope, $1)->type;
+            $$->type = scope_search_all(top_scope, $1)->type.super_type;
         }
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
