@@ -38,6 +38,9 @@ tree_t *mkprog(node_t *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tr
 tree_t *mksubprog(tree_t *subprog_head, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt);
 tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt);
 
+/* Gencode */
+void label_node(tree_t *node);
+
 /* Type Stuff */
 int super_type(tree_t *node);
 int tree_node_type(tree_t *node);

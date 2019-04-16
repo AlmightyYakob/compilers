@@ -109,6 +109,11 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
     return root;
 }
 
+/* Gencode */
+void label_node(tree_t *node){
+    
+}
+
 /* Type Stuff */
 int super_type(tree_t *node) {return node->attribute.sval->type.super_type;}
 // int tree_node_type(tree_t *node) {return node->type->tree_node_type;}

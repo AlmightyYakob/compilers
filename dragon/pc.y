@@ -189,6 +189,7 @@ subprogram_declaration:
             fprintf(stderr, "-----------POP--------\n");
             top_scope = pop_scope(top_scope);
 
+            /* Put label/gencode here? */
 
         }
     ;
@@ -243,7 +244,12 @@ parameter_list:
     ;
 
 compound_statement:
-    BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); }
+    BBEGIN optional_statements END {
+        $$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); 
+
+        /* Call label alg on $2 */
+        
+    }
     ;
 
 optional_statements:
