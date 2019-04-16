@@ -6,7 +6,7 @@
 
 
 typedef struct tree_s {
-	type_t *type; 		/* token type: INUM, RNUM, ID, RELOP, ADDOP, MULOP, SIGNOP, NOT, ... */
+	int type; 		    /* token type: INUM, RNUM, ID, RELOP, ADDOP, MULOP, SIGNOP, NOT, ... */
 	union {
 		int 	ival;	/* INUM */
 		float 	rval; 	/* RNUM */
@@ -38,11 +38,22 @@ tree_t *mkprog(node_t *id, tree_t *ids, tree_t *decls, tree_t *subprog_decls, tr
 tree_t *mksubprog(tree_t *subprog_head, tree_t *decls, tree_t *subprog_decls, tree_t *compound_stmt);
 tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt);
 
+/* Gencode */
+void label_node(tree_t *node);
+
 /* Type Stuff */
 int super_type(tree_t *node);
+int tree_node_type(tree_t *node);
 int child_types_match(tree_t *root);
-void eval_type(tree_t *root);
+int eval_type(tree_t *root);
 void check_bool(tree_t *root);
+
+void add_args_to_func(node_t *func_node, tree_t *arg_list);
+int verify_args(node_t *func_node, tree_t *arg_list);
+void print_args(node_t *func_node);
+
+int exists_return_statement(tree_t *node, tree_t *func_id);
+int exists_nonlocal_assign(tree_t *node, tree_t *func_id);
 
 /* Auxiliary */
 void tree_print(tree_t *);

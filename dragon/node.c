@@ -12,7 +12,8 @@ node_t *mknode(char *s){
     assert(p != NULL);
     p->name = strdup(s);
     p->next = NULL;
-    p->type = -1;
+    p->type.super_type = -1;
+    p->type.tree_node_type = -1;
     return p;
 }
 

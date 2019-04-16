@@ -33,6 +33,7 @@ extern scope_t *top_scope;
 %token PROCEDURE FUNCTION
 %token ARRAY OF
 %token INTEGER REAL
+%token ANY
 %token RESULT
 
 %token IF THEN ELSE
@@ -92,7 +93,7 @@ extern scope_t *top_scope;
 %type <tval> term;
 %type <tval> factor;
 
-//%type <ival> sign;
+%type <tval> sign;
 
 %%
 
@@ -116,7 +117,7 @@ identifier_list:
         }
         $$ = mkid(scope_insert(top_scope, $1));
     }
-    | identifier_list ',' ID    
+    | identifier_list ',' ID
         {
             if (scope_search(top_scope, $3) != NULL) {
                 yyerror("ID defined twice");
@@ -157,9 +158,39 @@ subprogram_declaration:
     compound_statement
 		{ 
             $$ = mksubprog($1, $2, $3, $4);
+            
+            /*
+                Check for return statement if function,
+                Check for lack thereof if a procedure
+
+                ($4, $1->left)
+             */
+            
+            if ($1->type == FUNCTION){
+                if (!exists_return_statement($4, $1->left)){
+                    yyerror("Missing function return statement");
+                }
+
+                /* Check for non-local assigns */
+                if (exists_nonlocal_assign($4, $1->left) == 1){
+                    yyerror("Assignment to non-local variable in function body");
+                }
+            }
+            else if ($1->type == PROCEDURE) {
+                if (exists_return_statement($4, $1->left)){
+                    yyerror("Illegal procedure return statement");
+                }
+            }
+            else {
+                /* This should literally never happen */
+            }
+
             /* pop current scope */ 
             fprintf(stderr, "-----------POP--------\n");
             top_scope = pop_scope(top_scope);
+
+            /* Put label/gencode here? */
+
         }
     ;
 
@@ -168,12 +199,16 @@ subprogram_head:
             if (scope_search(top_scope, $2) != NULL) {
                 yyerror("Function ID defined twice");
             }
+            
             node_t *func_id = scope_insert(top_scope, $2);
             fprintf(stderr, "-----------PUSH--------\n");
             top_scope = push_scope(top_scope);
     } arguments ':' maybe_result standard_type ';' { 
             /* push new scope and update type info of ID */
+
             node_t *func_id_node = scope_search_all(top_scope, $2);
+            add_args_to_func(func_id_node, $4);
+
             $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
     }
     | PROCEDURE ID {
@@ -184,7 +219,9 @@ subprogram_head:
         fprintf(stderr, "-----------PUSH--------\n");
         top_scope = push_scope(top_scope);
     } arguments ';' {
+
         node_t *proc_id_node = scope_search_all(top_scope, $2);
+        add_args_to_func(proc_id_node, $4);
         $$ = mktree(PROCEDURE, mkid(proc_id_node), $4);
     }
     ;
@@ -207,7 +244,12 @@ parameter_list:
     ;
 
 compound_statement:
-    BBEGIN optional_statements END    {$$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); }
+    BBEGIN optional_statements END {
+        $$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); 
+
+        /* Call label alg on $2 */
+        
+    }
     ;
 
 optional_statements:
@@ -235,10 +277,7 @@ matched_statement:
         {
             /* Check that variable and expression are the same type */
             /* Add check for functions not updating non-local variables */
-
-            eval_type($1);
-            eval_type($3);
-            if (super_type($1) != super_type($3)){
+            if (eval_type($1) != eval_type($3)){
                 yyerror("Mismatched types in assignment");
             }
 
@@ -257,11 +296,8 @@ matched_statement:
     | FOR variable ASSIGNOP simple_expression TO simple_expression DO matched_statement
         {
             /* Check that types of variable? and both expressions match */
-            eval_type($2);
-            eval_type($4);
-            eval_type($6);
 
-            if (super_type($2) != super_type($4) || super_type($4) != super_type($6)){
+            if (eval_type($2) != eval_type($4) || eval_type($4) != eval_type($6)){
                 yyerror("Type mismatch in FOR expression");
             }
 
@@ -271,12 +307,8 @@ matched_statement:
 
 unmatched_statement:
       IF expression THEN statement                                      
-        {   
+        {
             /* Check that expression is BOOLEAN */
-            // eval_type($2);
-            // if (super_type($2) != BOOL) {
-            //     yyerror("Using non-boolean expression in conditional statment");
-            // }
 
             check_bool($2);
             $$ = mktree(IF, $2, $4);
@@ -284,10 +316,6 @@ unmatched_statement:
     | IF expression THEN matched_statement ELSE unmatched_statement     
         {
             /* Check that expression is BOOLEAN */
-            // eval_type($2);
-            // if (super_type($2) != BOOL) {
-            //     yyerror("Using non-boolean expression in conditional statment");
-            // }
 
             check_bool($2);
             $$ = mktree(IF, $2, mktree(THEN, $4, $6));
@@ -305,19 +333,33 @@ variable:
         {
             /* Array access */
             /* Check that expression is of type INTEGER */
+            if (scope_search_all(top_scope, $1) != NULL){
+                /* Check that ID is of type array */
+                if (!(scope_search_all(top_scope, $1)->type.array)) {
+                    yyerror("Indexing non-array variable");
+                }
+            }
 
-            eval_type($3);
-            if (super_type($3) != INTEGER){
+            if (eval_type($3) != INTEGER){
                 yyerror("Array Access with non-integer type");
             }
 
+            /* maybe needs to be updated, to include expression? */
             $$ = mkid(scope_search_all(top_scope, $1)); 
         }
     ;
 
 procedure_statement:
       ID                            {$$ = mkid(scope_search_all(top_scope, $1));}
-    | ID '(' expression_list ')'    {$$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);}
+    | ID '(' expression_list ')'    
+        {   
+            /* Verify that parameters are correct in order and type */
+            if (!verify_args(scope_search_all(top_scope, $1), $3)) {
+                yyerror("Incorrect parameters to procedure call");
+            }
+
+            $$ = mktree(PROCEDURE_CALL, mkid(scope_search_all(top_scope, $1)), $3);
+        }
     ;
 
 expression_list:
@@ -333,7 +375,7 @@ expression:
 simple_expression:
     /* Here, need to check type of all children, to ensure matching */
     term                                { $$ = $1; }
-    /* | sign term                      { $$ = mkop(ADDOP, $?, 0, $2); } */
+    | sign term                         { $$ = mkop(MULOP, STAR, $1, $2); }
     | simple_expression ADDOP term      { $$ = mkop(ADDOP, $2, $1, $3); }
     ;
     /* issue here, sign should be lower than ADDOP */
@@ -344,11 +386,18 @@ term:
     ;
 
 factor:
-    ID                              { $$ = mkid(scope_search_all(top_scope, $1));}
-    | ID '[' expression ']'         
-        { 
-            eval_type($3);
-            if (super_type($3) != INTEGER){
+    ID                              
+        { $$ = mkid(scope_search_all(top_scope, $1)); }
+    | ID '[' expression ']'
+        {
+            if (scope_search_all(top_scope, $1) != NULL){
+                /* Check that ID is of type array */
+                if (!(scope_search_all(top_scope, $1)->type.array)) {
+                    yyerror("Indexing non-array variable");
+                }
+            }
+
+            if (eval_type($3) != INTEGER){
                 yyerror("Array Access with non-integer type");
             }
 
@@ -358,8 +407,18 @@ factor:
         {
             /* Check that types of expression_list matches the types in func declaration */
             /* Set super_type of this node to be return type of func */
-            $$->type->super_type = scope_search_all(top_scope, $1)->type;
+            
+            /* Check that ID is a function, not a procedure */
+            /* Checking that type is -1 isn't exactly correct */
+            if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type.super_type == -1){
+                yyerror("Procedure used as factor in expression (procedures can't return values)");
+            }
+
+            /* Verify that parameters are correct in order and type */
+            if (!verify_args(scope_search_all(top_scope, $1), $3)) yyerror("Incorrect parameters to function call");
+            
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
+            $$->type = scope_search_all(top_scope, $1)->type.super_type;
         }
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
@@ -368,20 +427,30 @@ factor:
     ;
 
 /* Not sure what to do with sign */
-/* 
+
 sign
-    : '+' {$$ =  1;}
-    | '-' {$$ = -1;}
+    : '+' {$$ =  mkinum(1); }
+    | '-' {$$ =  mkinum(-1); }
     ;
- */
+
 
 
 %%
 
 scope_t *top_scope;
+node_t *BUILTIN_READ;
+node_t *BUILTIN_WRITE;
 int CURRENT_LINE_NUM = 1;
 
 int main() {
     top_scope = mkscope();
+
+    /* Built-in functions */
+    BUILTIN_READ  = scope_insert(top_scope, "read");
+    BUILTIN_WRITE = scope_insert(top_scope, "write");
+
+    /* setup single argument for read and write, of any type */
+
+
     yyparse();
 }
