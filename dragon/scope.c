@@ -14,6 +14,7 @@ scope_t *mkscope(){
     for (int i=0; i < HASH_SIZE; i++) (p->table)[i] = NULL;
 
     p->next = NULL;
+    p->curr_offset = 0;
     return p;
 }
 
@@ -61,6 +62,7 @@ node_t *scope_insert(scope_t *top, char *name){
     int index = hashpjw(name);
     node_t *tmp = top->table[index];
     top->table[index] = node_insert(tmp, name);
+    top->table[index]->offset = top->curr_offset++;
     return top->table[index];
 }
 

@@ -10,10 +10,13 @@ struct arg_node_s;
 typedef struct node_s {
     char *name;
     struct node_s *next;
+
+    /* For code gen */
+    int offset;
     
     /* Variable type */
-    // int type;
     type_t type;
+
     /* Stores arguments for functions */
     struct arg_node_s *func_arguments;
     

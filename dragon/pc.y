@@ -248,7 +248,7 @@ compound_statement:
         $$ = mktree(BBEGIN, $2, mktree(END, NULL, NULL)); 
 
         /* Call label alg on $2 */
-        
+        label_node($2, 1);
     }
     ;
 

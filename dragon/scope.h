@@ -8,6 +8,7 @@
 typedef struct scope_s {
     node_t *table[HASH_SIZE];
     struct scope_s *next;
+    int curr_offset;
     /* node_t scope_owner */
 } scope_t;
 
