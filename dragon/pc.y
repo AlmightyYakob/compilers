@@ -453,4 +453,5 @@ int main() {
 
 
     yyparse();
+    /* Could call gcc here? */
 }

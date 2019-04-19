@@ -1,21 +1,26 @@
-	.file	"main.c"
+	.file	"empty.c"
 	.text
+	.globl	foo
+	.type	foo, @function
+foo:
+	pushl	%ebp
+	movl	%esp, %ebp
+	call	__x86.get_pc_thunk.ax
+	addl	$_GLOBAL_OFFSET_TABLE_, %eax
+	movl	$1, %eax
+	popl	%ebp
+	ret
+	.size	foo, .-foo
 	.globl	main
 	.type	main, @function
 main:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$16, %esp
 	call	__x86.get_pc_thunk.ax
 	addl	$_GLOBAL_OFFSET_TABLE_, %eax
-	movl	$12, -4(%ebp)
-	addl	$1, -4(%ebp)
-	cmpl	$12, -4(%ebp)
-	jle	.L2
-	subl	$1, -4(%ebp)
-.L2:
-	movl	$1, %eax
-	leave
+	call	foo
+	movl	$0, %eax
+	popl	%ebp
 	ret
 	.size	main, .-main
 	.section	.text.__x86.get_pc_thunk.ax,"axG",@progbits,__x86.get_pc_thunk.ax,comdat

@@ -5,11 +5,12 @@ LEX = lex
 
 all: mypc
 
-mypc: y.tab.o lex.yy.o tree.o scope.o node.o type.o
-	$(CC) $(FLAGS) -o mypc y.tab.o lex.yy.o tree.o scope.o node.o -ll -ly
+# Type not included, has just a .h
+mypc: y.tab.o lex.yy.o tree.o scope.o node.o gencode.o
+	$(CC) $(FLAGS) -o mypc y.tab.o lex.yy.o tree.o scope.o node.o gencode.o -ll -ly
 
-type.o: type.c
-	$(CC) $(FLAGS) -c type.c
+gencode.o: gencode.c
+	$(CC) $(FLAGS) -c gencode.c
 
 tree.o: tree.c
 	$(CC) $(FLAGS) -c tree.c
