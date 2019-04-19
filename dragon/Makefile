@@ -1,5 +1,6 @@
 CC = gcc
 FLAGS = -g
+OPTFLAGS = -m32
 YACC = yacc
 LEX = lex
 
@@ -34,6 +35,8 @@ lex.yy.c: pc.l
 	$(LEX) -l pc.l
 
 
+assemble: out.s
+	$(CC) $(OPTFLAGS) out.s
 
 test: tests/test_scope.c
 	$(CC) $(FLAGS) tests/test_scope.c node.c scope.c   
