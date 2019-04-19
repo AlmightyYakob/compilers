@@ -6,6 +6,7 @@
 #include "scope.h"
 #include "tree.h"
 #include "type.h"
+#include "gencode.h"
 #include "y.tab.h"
 
 extern int yyerror(char*);
@@ -107,7 +108,14 @@ program:
     subprogram_declarations
     compound_statement
     '.'
-    {$$ = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9); }
+    {
+        $$ = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9);
+
+        gen_prog_header($2);
+        gen_prologue($2, 10);
+        gen_stmt($9);
+        gen_epilogue(rnames[top_rstack()]);
+    }
     ;
 
 identifier_list:
@@ -162,8 +170,6 @@ subprogram_declaration:
             /*
                 Check for return statement if function,
                 Check for lack thereof if a procedure
-
-                ($4, $1->left)
              */
             
             if ($1->type == FUNCTION){
@@ -258,7 +264,7 @@ optional_statements:
     ;
 
 statement_list:
-    statement                           {$$ = $1; }
+    statement                           {$$ = $1; /* gen_stmt($1); */}
     | statement_list ';' statement      {$$ = mktree(LISTOP, $1, $3); }
     ;
 
@@ -441,9 +447,11 @@ scope_t *top_scope;
 node_t *BUILTIN_READ;
 node_t *BUILTIN_WRITE;
 int CURRENT_LINE_NUM = 1;
+FILE *OUTFILE;
 
-int main() {
+int main(int argc, const char* argv[]) {
     top_scope = mkscope();
+    OUTFILE = fopen("out.s", "w");
 
     /* Built-in functions */
     BUILTIN_READ  = scope_insert(top_scope, "read");
@@ -454,4 +462,6 @@ int main() {
 
     yyparse();
     /* Could call gcc here? */
+
+    fclose(OUTFILE);
 }

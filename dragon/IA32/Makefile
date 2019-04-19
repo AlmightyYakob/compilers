@@ -3,12 +3,12 @@ CFLAGS=-S -fno-asynchronous-unwind-tables
 OPTFLAGS=-m32
 
 any:
-	$(CC) *.c $(CFLAGS) $(OPTFLAGS)
+	$(CC) $(OPTFLAGS) *.c $(CFLAGS)
 
 all: main
 
 main: main.c
-	$(CC) main.c $(CFLAGS) $(OPTFLAGS)
+	$(CC) $(OPTFLAGS) main.c $(CFLAGS)
 
 clean:
 	rm -f *.s

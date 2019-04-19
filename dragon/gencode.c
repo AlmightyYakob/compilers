@@ -3,31 +3,144 @@
 #include "gencode.h"
 #include "y.tab.h"
 
+extern FILE *OUTFILE;
+
+int top_rstack_i = 2;
+int rstack[STACK_LENGTH] = {0,1,2};
+char *rnames[STACK_LENGTH] = {
+    "%ebx",
+    "%esi",
+    "%edi"
+};
+
+char *convert_op(tree_t *opnode){
+    switch (opnode->type){
+        case ADDOP:
+            switch (opnode->attribute.opval){
+                case PLUS:
+                    return "addl";
+                    break;
+
+                case MINUS:
+                    return "subl";
+                    break;
+
+                case OR:
+                    /* code */
+                    fprintf(stderr, "ADDOP - OR\n");
+                    break;
+            
+                default:
+                    fprintf(stderr, "ADDOP - DEFAULT\n");
+                    break;
+            }
+            break;
+
+        case MULOP:
+            /* code */
+            fprintf(stderr, "MULOP\n");
+            break;
+
+        case RELOP:
+            /* code */
+            fprintf(stderr, "RELOP\n");
+            break;
+    
+        default:
+            fprintf(stderr, "DEFAULT CASE IN COVERT_OP\n");
+            break;
+    }
+}
+
+int top_rstack() {
+    return rstack[top_rstack_i];
+}
+
+int pop_rstack() {
+    if (top_rstack > 0) return rstack[top_rstack_i--];
+    else {
+        fprintf(stderr, "CANNOT POP, ONLY 1 REGISTER IN STACK\n");
+        return rstack[top_rstack_i];
+    }
+}
+
+void push_rstack(int reg_index) {
+    if (top_rstack_i + 1 < STACK_LENGTH) rstack[++top_rstack_i] = reg_index;
+    else fprintf(stderr, "CANNOT PUSH, MAX REGISTERS IN STACK\n");
+}
+
+void swap_rstack() {
+    int a = pop_rstack();
+    int b = pop_rstack();
+
+    push_rstack(a);
+    push_rstack(b);
+}
+
+void print_rstack(){
+    int i;
+    fprintf(stderr, "RSTACK: [");
+    for (i=0; i <= top_rstack_i; i++){
+        fprintf(stderr, "%s", rnames[rstack[i]]);
+
+        if (i != top_rstack_i) fprintf(stderr, ", ");
+    }
+    fprintf(stderr, "]\n");
+}
+
+void gen_prog_header(const char *start_func) {
+    // fprintf(stderr, "\t.file\t\"%s.s\"\n", filename);
+    fprintf(OUTFILE, "\t.text\n");
+    fprintf(OUTFILE, "\t.globl\t%s\n", start_func);
+    fprintf(OUTFILE, "\t.type\t%s, @function\n", start_func);
+}
+
+void gen_prologue(char *func_name, int record_size) {
+    fprintf(OUTFILE, "%s:\n", func_name);
+    fprintf(OUTFILE, "\tpushl\t%%ebp\n");
+    fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
+    fprintf(OUTFILE, "\tsubl\t$%d, %%esp\n", record_size);
+}
+
+void gen_epilogue(char *returnval_loc) {
+    fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", returnval_loc);
+    fprintf(OUTFILE, "\tpopl\t%%ebp\n");
+    fprintf(OUTFILE, "\tret\n");
+}
+
 /* Wrapper for gen_expr */
 void gen_stmt(tree_t *node){
     switch (node->type) {
+        case LISTOP:
+            gen_stmt(node->left);
+            gen_stmt(node->right);
+            break;
         case IF:
-            /* code */
+            fprintf(stderr, "GEN_STMT - IF\n");
             break;
         
         case FOR:
-            /* code */
+            fprintf(stderr, "GEN_STMT - FOR\n");
             break;
         
         case WHILE:
-            /* code */
+            fprintf(stderr, "GEN_STMT - WHILE\n");
             break;
         
         case ASSIGNOP:
-            /* code */
+            fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
+            gen_expr(node->right, 1);
             break;
 
         case PROCEDURE_CALL:
-            /* code */
+            fprintf(stderr, "GEN_STMT - PROC_CALL\n");
+            /* HANDLE SPECIAL CASE FOR READ AND WRITE */
+
             break;
 
         case BBEGIN:
-            /* code */
+            fprintf(stderr, "GEN_STMT - BBEGIN\n");
+            if (node->left != NULL) gen_stmt(node->left);
             break;
     
         default:
@@ -37,53 +150,72 @@ void gen_stmt(tree_t *node){
 
 /* AKA gencode, left is 1 to represent its the left child or 0 if not */
 void gen_expr(tree_t *node, int left){
+    /* Replace with action out file */
+    
+    /* To store popped registers */
+    int R;
+
+    /* To store name of operation */
+    char *opname;
+
     label_node(node, 1);
 
     /* Case 0 */
     if (left && node->left == NULL && node->right == NULL){
+        fprintf(stderr, "GEN_EXPR - CASE 0\n");
         if (node->type == ID) {
             /* EVENTUALLY REPLACE THIS WITH MEM LOCATION OF VAR */
-            fprintf(stderr, "MOV\t%s, top(rstack)\n", node->attribute.sval->name);
+            fprintf(OUTFILE, "\tmovl\t%s, %s\n", node->attribute.sval->name, rnames[top_rstack()]);
         }
         else if (node->type == INUM){
-            fprintf(stderr, "MOV\t%d, top(rstack)\n", node->attribute.ival);
+            fprintf(OUTFILE, "\tmovl\t%d, %s\n", node->attribute.ival, rnames[top_rstack()]);
         }
         else if (node->type == RNUM) {
-            fprintf(stderr, "MOV\t%f, top(rstack)\n", node->attribute.rval);
+            fprintf(OUTFILE, "\tmovl\t%f, %s\n", node->attribute.rval, rnames[top_rstack()]);
         }
     }
     /* Case 1 */
     else if (node->right->label ==  0){
-        gen_expr(node->left, 1);
+        fprintf(stderr, "GEN_EXPR - CASE 1\n");
+        opname = convert_op(node);
 
-        /* Replace stderr with file descriptor */
-        fprintf(stderr, "%d\t%s, top(rstack)\n", node->type, node->right->attribute.sval->name);
+        gen_expr(node->left, 1);    
+        if (node->right->type == ID)        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, node->right->attribute.sval->name, rnames[top_rstack()]);
+        else if (node->right->type == INUM) fprintf(OUTFILE, "\t%s\t%d, %s\n", opname, node->right->attribute.ival, rnames[top_rstack()]);
+        else if (node->right->type == RNUM) fprintf(OUTFILE, "\t%s\t%f, %s\n", opname, node->right->attribute.rval, rnames[top_rstack()]);
     }
     /* Case 2 */
-    else if (1 <= node->left->label < node->right->label /* and node->left->label < r */) {
-        /* swap(rstack) */
+    else if (1 <= node->left->label < node->right->label && node->left->label < (top_rstack_i + 1)) {
+        fprintf(stderr, "GEN_EXPR - CASE 2\n");
+        opname = convert_op(node);
+
+        swap_rstack();
         gen_expr(node->right, 0);
-        /* R = pop(rstack) */
+        R = pop_rstack();
         gen_expr(node->left, 1);
         
-        /* Replace stderr with file descriptor */
-        fprintf(stderr, "%d\tR, top(rstack)\n", node->type);
+        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, rnames[R], rnames[top_rstack()]);
 
-        /* push(rstack, R) */
-        /* swap(rstack) */
+        push_rstack(R);
+        swap_rstack();
     }
     /* Case 3 */
-    else if (1 <= node->right->label < node->left->label /* and node->right->label < r */){
+    else if (1 <= node->right->label <= node->left->label && node->right->label < (top_rstack_i + 1)){
+        fprintf(stderr, "GEN_EXPR - CASE 3\n");
+        opname = convert_op(node);
+
         gen_expr(node->left, 1);
-        /* R = pop(rstack) */
+        R = pop_rstack();
         gen_expr(node->right, 0);
-        fprintf(stderr, "%d\ttop(rstack), R\n", node->type);
-        /* push(rstack, R) */
+        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, rnames[top_rstack()], rnames[R]);
+        push_rstack(R);
     }
     /* Case 4, ignoring this for now */
     else {
-        
+        fprintf(stderr, "GEN_EXPR - CASE 4\n");
     }
+
+    // print_rstack();
 }
 
 /* Returns 1 if the passed node is a leaf node, else 0. */
