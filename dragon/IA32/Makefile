@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-S -fno-asynchronous-unwind-tables
 OPTFLAGS=-m32
 
-all: main
+all: any
 
 any:
 	$(CC) $(OPTFLAGS) *.c $(CFLAGS)

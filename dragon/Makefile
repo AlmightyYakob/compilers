@@ -3,6 +3,7 @@ FLAGS = -g
 OPTFLAGS = -m32
 YACC = yacc
 LEX = lex
+A_OUT = COMPILED
 
 all: mypc
 
@@ -36,7 +37,7 @@ lex.yy.c: pc.l
 
 
 assemble: out.s
-	$(CC) $(OPTFLAGS) out.s
+	$(CC) $(OPTFLAGS) out.s -o $(A_OUT)
 
 test: tests/test_scope.c
 	$(CC) $(FLAGS) tests/test_scope.c node.c scope.c   

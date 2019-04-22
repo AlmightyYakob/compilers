@@ -4,6 +4,8 @@
 #include "y.tab.h"
 
 extern FILE *OUTFILE;
+extern node_t *BUILTIN_READ;
+extern node_t *BUILTIN_WRITE;
 
 int top_rstack_i = 2;
 int rstack[STACK_LENGTH] = {0,1,2};
@@ -88,24 +90,45 @@ void print_rstack(){
     fprintf(stderr, "]\n");
 }
 
-void gen_prog_header(const char *start_func) {
+void gen_file_header() {
     // fprintf(stderr, "\t.file\t\"%s.s\"\n", filename);
     fprintf(OUTFILE, "\t.text\n");
-    fprintf(OUTFILE, "\t.globl\t%s\n", start_func);
-    fprintf(OUTFILE, "\t.type\t%s, @function\n", start_func);
+    fprintf(OUTFILE, "\t.globl\tmain\n");
+    fprintf(OUTFILE, "\t.type\tmain, @function\n");
+}
+
+void gen_main_footer() {
+     fprintf(OUTFILE, "\t.size   main, .-main\n");
+     fprintf(OUTFILE, "\t.section    .text.__x86.get_pc_thunk.ax,\"axG\",@progbits,__x86.get_pc_thunk.ax,comdat\n");
+     fprintf(OUTFILE, "\t.globl  __x86.get_pc_thunk.ax\n");
+     fprintf(OUTFILE, "\t.hidden __x86.get_pc_thunk.ax\n");
+     fprintf(OUTFILE, "\t.type   __x86.get_pc_thunk.ax, @function\n");
+     fprintf(OUTFILE, "__x86.get_pc_thunk.ax:\n");
+     fprintf(OUTFILE, "\tmovl    (%%esp), %%eax\n");
+     fprintf(OUTFILE, "\tret\n");
+     fprintf(OUTFILE, "\t.ident  \"GCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0\"\n");
+     fprintf(OUTFILE, "\t.section    .note.GNU-stack,\"\",@progbits\n");
 }
 
 void gen_prologue(char *func_name, int record_size) {
     fprintf(OUTFILE, "%s:\n", func_name);
     fprintf(OUTFILE, "\tpushl\t%%ebp\n");
     fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
-    fprintf(OUTFILE, "\tsubl\t$%d, %%esp\n", record_size);
+    if (record_size > 0) fprintf(OUTFILE, "\tsubl\t$%d, %%esp\n", record_size);
 }
 
-void gen_epilogue(char *returnval_loc) {
-    fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", returnval_loc);
+void gen_epilogue(int useVal, char *returnval_loc, int return_val) {
+    if (useVal) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", return_val);
+    else fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", returnval_loc);
+
     fprintf(OUTFILE, "\tpopl\t%%ebp\n");
     fprintf(OUTFILE, "\tret\n");
+}
+
+void gen_main(const char *prog_name) {
+    gen_prologue("main", 0);
+    fprintf(OUTFILE, "\tcall\t%s\n", prog_name);
+    gen_epilogue(1, NULL, 0);
 }
 
 /* Wrapper for gen_expr */
@@ -134,8 +157,20 @@ void gen_stmt(tree_t *node){
 
         case PROCEDURE_CALL:
             fprintf(stderr, "GEN_STMT - PROC_CALL\n");
-            /* HANDLE SPECIAL CASE FOR READ AND WRITE */
+            if (node->left->attribute.sval == BUILTIN_WRITE) {
+                fprintf(stderr, "GEN_STMT - BUILTIN_WRITE\n");
 
+                fprintf(OUTFILE, "\tpushl\t$3\n");
+                fprintf(OUTFILE, "\tcall\tprintf@PLT\n");
+            }
+            else if (node->left->attribute.sval == BUILTIN_READ) {
+                fprintf(stderr, "GEN_STMT - BUILTIN_READ\n");
+
+            }
+            else {
+                /* Normal Case */
+
+            }
             break;
 
         case BBEGIN:
@@ -168,7 +203,7 @@ void gen_expr(tree_t *node, int left){
             fprintf(OUTFILE, "\tmovl\t%s, %s\n", node->attribute.sval->name, rnames[top_rstack()]);
         }
         else if (node->type == INUM){
-            fprintf(OUTFILE, "\tmovl\t%d, %s\n", node->attribute.ival, rnames[top_rstack()]);
+            fprintf(OUTFILE, "\tmovl\t$%d, %s\n", node->attribute.ival, rnames[top_rstack()]);
         }
         else if (node->type == RNUM) {
             fprintf(OUTFILE, "\tmovl\t%f, %s\n", node->attribute.rval, rnames[top_rstack()]);

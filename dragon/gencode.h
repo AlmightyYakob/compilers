@@ -10,7 +10,7 @@
  * 
  * Lower Memory Addresses
  * -----------------------------------
- * | .
+ * | Passing Arguments
  * -----------------------------------
  * | Local Variables
  * -----------------------------------
@@ -20,9 +20,7 @@
  * -----------------------------------
  * | Return Address
  * --------------------------------------------- <-- Divider between function activation records
- * | Passed Argument 1
- * -----------------------------------
- * | Passed Argument 2
+ * | Passed Arguments
  * -----------------------------------
  * | .
  * -----------------------------------
@@ -82,9 +80,11 @@ void push_rstack();
 void swap_rstack();
 void print_rstack();
 
-void gen_prog_header(const char *filename);
+void gen_file_header();
+void gen_main_footer();
 void gen_prologue();
 void gen_epilogue();
+void gen_main(const char *prog_name);
 
 void gen_stmt(tree_t *node);
 void gen_expr(tree_t *node, int left);

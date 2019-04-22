@@ -13,6 +13,7 @@ extern int yyerror(char*);
 extern int yylex();
 
 extern scope_t *top_scope;
+extern tree_t *TREE_ROOT;
 
 #define ECHO 1
 
@@ -109,12 +110,11 @@ program:
     compound_statement
     '.'
     {
-        $$ = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9);
+        $$ = TREE_ROOT = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9);
 
-        gen_prog_header($2);
-        gen_prologue($2, 10);
+        gen_prologue($2, 0);
         gen_stmt($9);
-        gen_epilogue(rnames[top_rstack()]);
+        gen_epilogue(0, rnames[top_rstack()], 0);
     }
     ;
 
@@ -446,6 +446,8 @@ sign
 scope_t *top_scope;
 node_t *BUILTIN_READ;
 node_t *BUILTIN_WRITE;
+tree_t *TREE_ROOT;
+
 int CURRENT_LINE_NUM = 1;
 FILE *OUTFILE;
 
@@ -459,8 +461,10 @@ int main(int argc, const char* argv[]) {
 
     /* setup single argument for read and write, of any type */
 
-
+    gen_file_header();
     yyparse();
+    gen_main(TREE_ROOT->left->left->attribute.sval->name);
+    gen_main_footer();
     /* Could call gcc here? */
 
     fclose(OUTFILE);

@@ -1,36 +1,37 @@
-	.file	"main.c"
+	.file	"empty.c"
 	.text
-	.section	.rodata
-.LC0:
-	.string	"%d\n"
-	.text
-	.globl	main
-	.type	main, @function
-main:
-	leal	4(%esp), %ecx
-	andl	$-16, %esp
-	pushl	-4(%ecx)
+	.globl	actual
+	.type	actual, @function
+actual:
 	pushl	%ebp
 	movl	%esp, %ebp
-	pushl	%ebx
-	pushl	%ecx
 	subl	$16, %esp
 	call	__x86.get_pc_thunk.ax
 	addl	$_GLOBAL_OFFSET_TABLE_, %eax
-	movl	$12, -12(%ebp)
-	subl	$8, %esp
-	pushl	-12(%ebp)
-	leal	.LC0@GOTOFF(%eax), %edx
-	pushl	%edx
-	movl	%eax, %ebx
-	call	printf@PLT
-	addl	$16, %esp
-	movl	$1, %eax
-	leal	-8(%ebp), %esp
-	popl	%ecx
-	popl	%ebx
+	movl	$1, -16(%ebp)
+	movl	$2, -12(%ebp)
+	movl	-16(%ebp), %edx
+	movl	-12(%ebp), %eax
+	addl	%edx, %eax
+	movl	%eax, -8(%ebp)
+	movl	-16(%ebp), %edx
+	movl	-8(%ebp), %eax
+	addl	%edx, %eax
+	movl	%eax, -4(%ebp)
+	movl	-4(%ebp), %eax
+	leave
+	ret
+	.size	actual, .-actual
+	.globl	main
+	.type	main, @function
+main:
+	pushl	%ebp
+	movl	%esp, %ebp
+	call	__x86.get_pc_thunk.ax
+	addl	$_GLOBAL_OFFSET_TABLE_, %eax
+	call	actual
+	movl	$0, %eax
 	popl	%ebp
-	leal	-4(%ecx), %esp
 	ret
 	.size	main, .-main
 	.section	.text.__x86.get_pc_thunk.ax,"axG",@progbits,__x86.get_pc_thunk.ax,comdat

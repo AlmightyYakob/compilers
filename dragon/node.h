@@ -13,8 +13,9 @@ typedef struct node_s {
 
     /* For code gen */
     int offset;
-    
-    /* ADD UPPER AND LOWER BOUNDS FOR ARRAYS */
+
+    /* Only valid if type.array is true */    
+    int array_lower_bound, array_upper_bound;
 
     /* Variable type */
     type_t type;
