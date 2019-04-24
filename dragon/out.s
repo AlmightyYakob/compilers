@@ -4,7 +4,17 @@
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	movl	$13, %edi
+	movl	$3, %esi
+	movl	$4, %edi
+	addl	5, %edi
+	subl	%edi, %esi
+	movl	$1, %edi
+	addl	2, %edi
+	subl	%esi, %edi
+	movl	$5, %edi
+	addl	1, %edi
+	pushl	$3
+	call	printf@PLT
 	movl	%edi, %eax
 	popl	%ebp
 	ret

@@ -10,7 +10,11 @@
  * 
  * Lower Memory Addresses
  * -----------------------------------
- * | Passing Arguments
+ * | Passing Argument 1
+ * -----------------------------------
+ * | Passing Argument 2
+ * -----------------------------------
+ * | Passing Argument 3 - n
  * -----------------------------------
  * | Local Variables
  * -----------------------------------
@@ -20,11 +24,11 @@
  * -----------------------------------
  * | Return Address
  * --------------------------------------------- <-- Divider between function activation records
- * | Passed Arguments
+ * | Passed Argument 1
  * -----------------------------------
- * | .
+ * | Passed Argument 2
  * -----------------------------------
- * | .
+ * | Passed Argument 3 - n
  * -----------------------------------
  * 
  * Higher Memory Addresses

@@ -14,18 +14,16 @@ main:
 	movl	%esp, %ebp
 	pushl	%ebx
 	pushl	%ecx
-	subl	$16, %esp
 	call	__x86.get_pc_thunk.ax
 	addl	$_GLOBAL_OFFSET_TABLE_, %eax
-	movl	$12, -12(%ebp)
 	subl	$8, %esp
-	pushl	-12(%ebp)
+	pushl	$12
 	leal	.LC0@GOTOFF(%eax), %edx
 	pushl	%edx
 	movl	%eax, %ebx
 	call	printf@PLT
 	addl	$16, %esp
-	movl	$1, %eax
+	movl	$0, %eax
 	leal	-8(%ebp), %esp
 	popl	%ecx
 	popl	%ebx
