@@ -17,9 +17,9 @@
  * -----------------------------------
  * | Passing Argument 3 - n
  * -----------------------------------
- * | Local Variables
+ * | Local Variables = 4*numVars
  * -----------------------------------
- * | Temp Expression Memory
+ * | Temp Expression Memory = 8 bytes
  * -----------------------------------
  * | Previous Base Pointer
  * -----------------------------------
@@ -81,6 +81,7 @@ int CURR_IDENT;
 
 
 char *convert_op(tree_t *opnode);
+int get_byte_offset(tree_t *id_node);
 
 int top_rstack();
 int pop_rstack();
@@ -88,10 +89,11 @@ void push_rstack();
 void swap_rstack();
 void print_rstack();
 
+void gen_format_section();
 void gen_file_header();
 void gen_main_footer();
-void gen_prologue();
-void gen_epilogue();
+void gen_prologue(char *func_name, int record_size);
+void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val);
 void gen_main(const char *prog_name);
 void gen_write_format();
 

@@ -14,10 +14,12 @@ main:
 	movl	%esp, %ebp
 	pushl	%ebx
 	pushl	%ecx
+	subl	$16, %esp
 	call	__x86.get_pc_thunk.ax
 	addl	$_GLOBAL_OFFSET_TABLE_, %eax
+	movl	$12, -12(%ebp)
 	subl	$8, %esp
-	pushl	$12
+	pushl	-12(%ebp)
 	leal	.LC0@GOTOFF(%eax), %edx
 	pushl	%edx
 	movl	%eax, %ebx

@@ -2,5 +2,6 @@
 #include <stdlib.h>
 
 int main(){
-    printf("%d\n", 12);
+    int x = 12;
+    printf("%d\n", x);
 }

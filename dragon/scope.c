@@ -62,7 +62,8 @@ node_t *scope_insert(scope_t *top, char *name){
     int index = hashpjw(name);
     node_t *tmp = top->table[index];
     top->table[index] = node_insert(tmp, name);
-    top->table[index]->offset = top->curr_offset++;
+    if (strcmp(name, "input") == 0 || strcmp(name, "output") == 0) top->table[index]->offset = -1;
+    else top->table[index]->offset = top->curr_offset++;
     return top->table[index];
 }
 
@@ -86,6 +87,10 @@ void scope_print(scope_t *current_scope){
     }
 
     fprintf(stderr, "----END PRINT SCOPE----\n");
+}
+
+int num_local_vars(scope_t *curr_scope){
+    return curr_scope->curr_offset;
 }
 
 

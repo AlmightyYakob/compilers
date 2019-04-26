@@ -114,9 +114,11 @@ program:
     {
         $$ = TREE_ROOT = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9);
 
-        gen_prologue($2, 0);
+        int record_size = num_local_vars(top_scope)*4 /* + passing vars + extra space */;
+
+        gen_prologue($2, record_size);
         gen_stmt($9);
-        gen_epilogue(0, rnames[top_rstack()], 0);
+        gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
     }
     ;
 
@@ -192,6 +194,11 @@ subprogram_declaration:
             else {
                 /* This should literally never happen */
             }
+
+            int record_size = num_local_vars(top_scope)*4 /* + passing vars + extra space */;
+            gen_prologue($1->left->attribute.sval->name, record_size);
+            gen_stmt($4);
+            gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
 
             /* pop current scope */ 
             fprintf(stderr, "-----------POP--------\n");

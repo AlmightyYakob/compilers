@@ -7,7 +7,9 @@ extern FILE *OUTFILE;
 extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
 
-int CURR_IDENT = 0;
+/* Start at 2 because 0 and 1 used for printf int and float */
+int CURR_IDENT = 2;
+
 int top_rstack_i = 2;
 int rstack[STACK_LENGTH] = {0,1,2};
 char *rnames[STACK_LENGTH] = {
@@ -55,6 +57,38 @@ char *convert_op(tree_t *opnode){
     }
 }
 
+int get_byte_offset(tree_t *id_node){
+    return id_node->attribute.sval->offset*4;
+}
+
+void handle_write_call(tree_t *call_node){
+    if (call_node->right->type == ID){
+        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
+
+        if (call_node->right->attribute.sval->type.super_type == INTEGER) {
+            fprintf(OUTFILE, "\tpushl\t$.LC0\n");
+        }
+        else if (call_node->right->attribute.sval->type.super_type == REAL) {
+            fprintf(OUTFILE, "\tpushl\t$.LC1\n");
+        }
+    }
+    else {
+        if (call_node->right->type == INUM) {
+            fprintf(OUTFILE, "\tpushl\t$%d\n", call_node->right->attribute.ival);
+            fprintf(OUTFILE, "\tpushl\t$.LC0\n");
+        }
+        if (call_node->right->type == RNUM) {
+            fprintf(OUTFILE, "\tpushl\t$%f\n", call_node->right->attribute.rval);
+            fprintf(OUTFILE, "\tpushl\t$.LC1\n");
+        }
+    }
+
+    fprintf(OUTFILE, "\tcall\tprintf\n");
+    fprintf(OUTFILE, "\taddl\t$8, %%esp\n");
+}
+
+/* Stack Routines */
+
 int top_rstack() {
     return rstack[top_rstack_i];
 }
@@ -91,8 +125,18 @@ void print_rstack(){
     fprintf(stderr, "]\n");
 }
 
+void gen_format_section() {
+    fprintf(OUTFILE, "\t.section\t.rodata\n");
+    fprintf(OUTFILE, ".LC0:\n");
+    fprintf(OUTFILE, "\t.string \"%%d\\n\"\n");
+    fprintf(OUTFILE, ".LC1:\n");
+    fprintf(OUTFILE, "\t.string \"\%%f\\n\"\n");
+
+}
+
 void gen_file_header() {
     // fprintf(stderr, "\t.file\t\"%s.s\"\n", filename);
+    gen_format_section();
     fprintf(OUTFILE, "\t.text\n");
     fprintf(OUTFILE, "\t.globl\tmain\n");
     fprintf(OUTFILE, "\t.type\tmain, @function\n");
@@ -118,9 +162,11 @@ void gen_prologue(char *func_name, int record_size) {
     if (record_size > 0) fprintf(OUTFILE, "\tsubl\t$%d, %%esp\n", record_size);
 }
 
-void gen_epilogue(int useVal, char *returnval_loc, int return_val) {
+void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val) {
     if (useVal) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", return_val);
     else fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", returnval_loc);
+
+    if (record_size > 0) fprintf(OUTFILE, "\taddl\t$%d, %%esp\n", record_size);
 
     fprintf(OUTFILE, "\tpopl\t%%ebp\n");
     fprintf(OUTFILE, "\tret\n");
@@ -129,7 +175,7 @@ void gen_epilogue(int useVal, char *returnval_loc, int return_val) {
 void gen_main(const char *prog_name) {
     gen_prologue("main", 0);
     fprintf(OUTFILE, "\tcall\t%s\n", prog_name);
-    gen_epilogue(1, NULL, 0);
+    gen_epilogue(0, 1, NULL, 0);
 }
 
 void gen_write_format() {
@@ -160,19 +206,20 @@ void gen_stmt(tree_t *node){
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
             gen_expr(node->right, 1);
+            /* val should be in top register. Move that into mem_loc of var */
+            
+            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n",rnames[top_rstack()], get_byte_offset(node->left));
+            
             break;
 
         case PROCEDURE_CALL:
             fprintf(stderr, "GEN_STMT - PROC_CALL\n");
             if (node->left->attribute.sval == BUILTIN_WRITE) {
                 fprintf(stderr, "GEN_STMT - BUILTIN_WRITE\n");
-
-                fprintf(OUTFILE, "\tpushl\t$3\n");
-                fprintf(OUTFILE, "\tcall\tprintf@PLT\n");
+                handle_write_call(node);
             }
             else if (node->left->attribute.sval == BUILTIN_READ) {
                 fprintf(stderr, "GEN_STMT - BUILTIN_READ\n");
-
             }
             else {
                 /* Normal Case */
@@ -207,6 +254,7 @@ void gen_expr(tree_t *node, int left){
         fprintf(stderr, "GEN_EXPR - CASE 0\n");
         if (node->type == ID) {
             /* EVENTUALLY REPLACE THIS WITH MEM LOCATION OF VAR */
+            // fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %s\n", node->attribute.sval->offset, rnames[top_rstack()]);
             fprintf(OUTFILE, "\tmovl\t%s, %s\n", node->attribute.sval->name, rnames[top_rstack()]);
         }
         else if (node->type == INUM){
@@ -223,8 +271,8 @@ void gen_expr(tree_t *node, int left){
 
         gen_expr(node->left, 1);    
         if (node->right->type == ID)        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, node->right->attribute.sval->name, rnames[top_rstack()]);
-        else if (node->right->type == INUM) fprintf(OUTFILE, "\t%s\t%d, %s\n", opname, node->right->attribute.ival, rnames[top_rstack()]);
-        else if (node->right->type == RNUM) fprintf(OUTFILE, "\t%s\t%f, %s\n", opname, node->right->attribute.rval, rnames[top_rstack()]);
+        else if (node->right->type == INUM) fprintf(OUTFILE, "\t%s\t$%d, %s\n", opname, node->right->attribute.ival, rnames[top_rstack()]);
+        else if (node->right->type == RNUM) fprintf(OUTFILE, "\t%s\t$%f, %s\n", opname, node->right->attribute.rval, rnames[top_rstack()]);
     }
     /* Case 2 */
     else if (1 <= node->left->label < node->right->label && node->left->label < (top_rstack_i + 1)) {
