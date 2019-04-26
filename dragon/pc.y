@@ -14,6 +14,8 @@ extern int yylex();
 
 extern scope_t *top_scope;
 extern tree_t *TREE_ROOT;
+extern node_t *BUILTIN_READ;
+extern node_t *BUILTIN_WRITE;
 
 #define ECHO 1
 
@@ -229,6 +231,10 @@ subprogram_head:
         node_t *proc_id_node = scope_search_all(top_scope, $2);
         add_args_to_func(proc_id_node, $4);
         $$ = mktree(PROCEDURE, mkid(proc_id_node), $4);
+
+        if (proc_id_node == BUILTIN_WRITE) {
+            gen_write_format();
+        }
     }
     ;
 

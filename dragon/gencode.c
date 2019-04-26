@@ -7,6 +7,7 @@ extern FILE *OUTFILE;
 extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
 
+int CURR_IDENT = 0;
 int top_rstack_i = 2;
 int rstack[STACK_LENGTH] = {0,1,2};
 char *rnames[STACK_LENGTH] = {
@@ -129,6 +130,12 @@ void gen_main(const char *prog_name) {
     gen_prologue("main", 0);
     fprintf(OUTFILE, "\tcall\t%s\n", prog_name);
     gen_epilogue(1, NULL, 0);
+}
+
+void gen_write_format() {
+    fprintf(OUTFILE, ".LC%d:\n", CURR_IDENT);
+    fprintf(OUTFILE, "\t.string \"%d\"\n", CURR_IDENT);
+    
 }
 
 /* Wrapper for gen_expr */

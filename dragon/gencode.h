@@ -2,6 +2,7 @@
 #define GENCODE_H
 
 #include "tree.h"
+#include "node.h"
 #define STACK_LENGTH 3
 
 /*
@@ -75,6 +76,9 @@ int rstack[STACK_LENGTH];
 /* Stores name of registers to use */
 char *rnames[STACK_LENGTH];
 
+/* Stores the current identifier num */
+int CURR_IDENT;
+
 
 char *convert_op(tree_t *opnode);
 
@@ -89,6 +93,7 @@ void gen_main_footer();
 void gen_prologue();
 void gen_epilogue();
 void gen_main(const char *prog_name);
+void gen_write_format();
 
 void gen_stmt(tree_t *node);
 void gen_expr(tree_t *node, int left);
