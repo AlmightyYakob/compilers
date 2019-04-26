@@ -7,8 +7,8 @@ extern FILE *OUTFILE;
 extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
 
-/* Start at 2 because 0 and 1 used for printf int and float */
-int CURR_IDENT = 2;
+/* Start at 3 because 0 and 1 used for printf int and float, 2 used for scanf of int */
+int CURR_IDENT = 3;
 
 int top_rstack_i = 2;
 int rstack[STACK_LENGTH] = {0,1,2};
@@ -87,6 +87,26 @@ void handle_write_call(tree_t *call_node){
     fprintf(OUTFILE, "\taddl\t$8, %%esp\n");
 }
 
+void handle_read_call(tree_t *call_node){
+    if (call_node->right->type == ID){
+        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
+
+        if (call_node->right->attribute.sval->type.super_type == INTEGER) {
+            fprintf(OUTFILE, "\tpushl\t$.LC2\n");
+        }
+        else if (call_node->right->attribute.sval->type.super_type == REAL) {
+            // fprintf(OUTFILE, "\tpushl\t$.LC3\n");
+        }
+    }
+    else {
+        fprintf(stderr, "CALLING WRITE ON CONSTANT\n");
+    }
+
+    fprintf(OUTFILE, "\tcall\tscanf\n");
+    fprintf(OUTFILE, "\taddl\t$4, %%esp\n");
+    fprintf(OUTFILE, "\tpopl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
+}
+
 /* Stack Routines */
 
 int top_rstack() {
@@ -127,10 +147,16 @@ void print_rstack(){
 
 void gen_format_section() {
     fprintf(OUTFILE, "\t.section\t.rodata\n");
+    
+    /* For printf */
     fprintf(OUTFILE, ".LC0:\n");
     fprintf(OUTFILE, "\t.string \"%%d\\n\"\n");
     fprintf(OUTFILE, ".LC1:\n");
-    fprintf(OUTFILE, "\t.string \"\%%f\\n\"\n");
+    fprintf(OUTFILE, "\t.string \"%%f\\n\"\n");
+
+    /* For scanf */
+    fprintf(OUTFILE, ".LC2:\n");
+    fprintf(OUTFILE, "\t.string \"%%d\"\n");
 
 }
 
@@ -206,8 +232,8 @@ void gen_stmt(tree_t *node){
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
             gen_expr(node->right, 1);
+
             /* val should be in top register. Move that into mem_loc of var */
-            
             fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n",rnames[top_rstack()], get_byte_offset(node->left));
             
             break;
@@ -220,9 +246,11 @@ void gen_stmt(tree_t *node){
             }
             else if (node->left->attribute.sval == BUILTIN_READ) {
                 fprintf(stderr, "GEN_STMT - BUILTIN_READ\n");
+                handle_read_call(node);
             }
             else {
                 /* Normal Case */
+                // fprintf(OUTFILE, "\tcall\t%s", node->);
 
             }
             break;

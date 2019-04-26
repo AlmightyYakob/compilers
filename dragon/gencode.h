@@ -83,6 +83,9 @@ int CURR_IDENT;
 char *convert_op(tree_t *opnode);
 int get_byte_offset(tree_t *id_node);
 
+void handle_write_call(tree_t *call_node);
+void handle_read_call(tree_t *call_node);
+
 int top_rstack();
 int pop_rstack();
 void push_rstack();

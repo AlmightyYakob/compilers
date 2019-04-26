@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 int main(){
-    int x = 12;
+    int x;
+    scanf("%d", &x);
     printf("%d\n", x);
 }
