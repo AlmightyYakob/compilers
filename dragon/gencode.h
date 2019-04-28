@@ -17,13 +17,13 @@
  * -----------------------------------
  * | Passing Argument 3 - n
  * -----------------------------------
- * | Local Variables = 4*numVars
+ * | Local Variables = 4*numVars    ✓
  * -----------------------------------
- * | Temp Expression Memory = 8 bytes
+ * | Temp Expression Memory = 8 bytes ✓
  * -----------------------------------
- * | Previous Base Pointer
+ * | Previous Base Pointer          ✓
  * -----------------------------------
- * | Return Address
+ * | Return Address                 ✓
  * --------------------------------------------- <-- Divider between function activation records
  * | Passed Argument 1
  * -----------------------------------
@@ -34,6 +34,8 @@
  * 
  * Higher Memory Addresses
  *
+ * 
+ **** Could handle passing arguments by just pushing vars onto stack when they're called, and then adding after
  *
  *
  * REGISTERS
@@ -79,6 +81,9 @@ char *rnames[STACK_LENGTH];
 /* Stores the current identifier num */
 int CURR_IDENT;
 
+/* Offset into the variable portion of the stack */
+int VAR_OFFSET;
+
 
 char *convert_op(tree_t *opnode);
 int get_byte_offset(tree_t *id_node);
@@ -98,6 +103,7 @@ void gen_main_footer();
 void gen_prologue(char *func_name, int record_size);
 void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val);
 void gen_main(const char *prog_name);
+void gen_function_call(tree_t *call_node);
 void gen_write_format();
 
 void gen_stmt(tree_t *node);

@@ -46,3 +46,15 @@ void node_print(node_t *top){
     fprintf(stderr, "\n");
     fprintf(stderr, "END LIST PRINT");
 }
+
+int num_args(node_t *node){
+    arg_node_t *curr_node = node->func_arguments;
+    int num = 0;
+
+    while(curr_node != NULL) {
+        ++num;
+        curr_node = curr_node->next;
+    }
+
+    return num;
+}

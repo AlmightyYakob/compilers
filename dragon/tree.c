@@ -110,6 +110,57 @@ tree_t *mkfor(tree_t *var, tree_t *assign_expr, tree_t *to_expr, tree_t *do_stmt
     return root;
 }
 
+/* Gencode Related */
+
+/* Returns maximum number of passed arguments to a function, in the given tree root. */
+/* node should be the root of a statement list, like compound_statement or optional_statments */
+int max_passed_args(tree_t *node){
+    int max = 0;
+    int temp_num = 0;
+
+    if (node->type == BBEGIN){
+        node = node->left;
+    }
+
+    while (node != NULL){
+        if (node->type != LISTOP) {
+            /* Means that it's the only statement in list, break after this */
+            if (node->type == PROCEDURE_CALL || node->type == FUNCTION_CALL){
+                if ((temp_num = num_args(node->left->attribute.sval)) > max) max = temp_num;   
+            }
+
+            break;
+        }
+        else {
+            /* check right, and move node*/
+
+            /* Don't know why this would happen but hey */
+            if (node->right == NULL) break;
+
+
+            if (node->right->type == PROCEDURE_CALL || node->right->type == FUNCTION_CALL){
+                if ((temp_num = num_args(node->right->left->attribute.sval)) > max) max = temp_num;
+            }
+            
+            if (node->left->type != LISTOP) {
+                /* check left */
+
+                /* Again don't know why this would happen but to be safe */
+                if (node->left == NULL) break;
+
+                if (node->left->type == PROCEDURE_CALL || node->left->type == FUNCTION_CALL) {
+                    if ((temp_num = num_args(node->left->left->attribute.sval)) > max) max = temp_num;
+                }
+
+                break;
+            }
+            else node = node->left;
+        }
+    }
+
+    return max;
+}
+
 /* Type Stuff */
 int super_type(tree_t *node) {return node->attribute.sval->type.super_type;}
 // int tree_node_type(tree_t *node) {return node->type->tree_node_type;}

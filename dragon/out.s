@@ -8,21 +8,26 @@
 	.text
 	.globl	main
 	.type	main, @function
-boo:
+moo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$16, %esp
-	pushl	-8(%ebp)
-	pushl	$.LC2
-	call	scanf
-	addl	$4, %esp
-	popl	-8(%ebp)
-	pushl	-8(%ebp)
+	subl	$4, %esp
+	movl	$13, %edi
+	movl	%edi, -16(%ebp)
+	pushl	-16(%ebp)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp
 	movl	%edi, %eax
-	addl	$16, %esp
+	addl	$4, %esp
+	popl	%ebp
+	ret
+boo:
+	pushl	%ebp
+	movl	%esp, %ebp
+	subl	$28, %esp
+	movl	%edi, %eax
+	addl	$28, %esp
 	popl	%ebp
 	ret
 main:

@@ -114,7 +114,10 @@ program:
     {
         $$ = TREE_ROOT = mkprog(scope_insert(top_scope, $2), $4, $7, $8, $9);
 
-        int record_size = num_local_vars(top_scope)*4 /* + passing vars + extra space */;
+        // int max_passed = max_passed_args($9);
+        // fprintf(stderr, "MAX PASSED == %d\n", max_passed);
+        // int record_size = num_local_vars(top_scope)*4 + max_passed + VAR_OFFSET;
+        int record_size = num_local_vars(top_scope)*4 + VAR_OFFSET;
 
         gen_prologue($2, record_size);
         gen_stmt($9);
@@ -195,7 +198,11 @@ subprogram_declaration:
                 /* This should literally never happen */
             }
 
-            int record_size = num_local_vars(top_scope)*4 /* + passing vars + extra space */;
+            // int max_passed = max_passed_args($4);
+            // fprintf(stderr, "%s: MAX PASSED == %d\n", $1->left->attribute.sval->name, max_passed);
+            // int record_size = num_local_vars(top_scope)*4 + max_passed + VAR_OFFSET;
+            int record_size = num_local_vars(top_scope)*4 + VAR_OFFSET;
+
             gen_prologue($1->left->attribute.sval->name, record_size);
             gen_stmt($4);
             gen_epilogue(record_size, 0, rnames[top_rstack()], 0);

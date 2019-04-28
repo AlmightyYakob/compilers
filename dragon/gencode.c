@@ -10,6 +10,8 @@ extern node_t *BUILTIN_WRITE;
 /* Start at 3 because 0 and 1 used for printf int and float, 2 used for scanf of int */
 int CURR_IDENT = 3;
 
+int VAR_OFFSET = 8;
+
 int top_rstack_i = 2;
 int rstack[STACK_LENGTH] = {0,1,2};
 char *rnames[STACK_LENGTH] = {
@@ -63,7 +65,7 @@ int get_byte_offset(tree_t *id_node){
 
 void handle_write_call(tree_t *call_node){
     if (call_node->right->type == ID){
-        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
+        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", VAR_OFFSET + get_byte_offset(call_node->right));
 
         if (call_node->right->attribute.sval->type.super_type == INTEGER) {
             fprintf(OUTFILE, "\tpushl\t$.LC0\n");
@@ -89,7 +91,7 @@ void handle_write_call(tree_t *call_node){
 
 void handle_read_call(tree_t *call_node){
     if (call_node->right->type == ID){
-        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
+        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", VAR_OFFSET + get_byte_offset(call_node->right));
 
         if (call_node->right->attribute.sval->type.super_type == INTEGER) {
             fprintf(OUTFILE, "\tpushl\t$.LC2\n");
@@ -104,7 +106,7 @@ void handle_read_call(tree_t *call_node){
 
     fprintf(OUTFILE, "\tcall\tscanf\n");
     fprintf(OUTFILE, "\taddl\t$4, %%esp\n");
-    fprintf(OUTFILE, "\tpopl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
+    fprintf(OUTFILE, "\tpopl\t-%d(%%ebp)\n", VAR_OFFSET + get_byte_offset(call_node->right));
 }
 
 /* Stack Routines */
@@ -204,6 +206,47 @@ void gen_main(const char *prog_name) {
     gen_epilogue(0, 1, NULL, 0);
 }
 
+/* Type of call_node should be either proc_call or func_call */
+void gen_function_call(tree_t *call_node){
+    if (call_node->type != PROCEDURE_CALL && call_node->type != FUNCTION_CALL) return;
+
+    arg_node_t *curr_arg = call_node->left->attribute.sval->func_arguments;
+    tree_t *curr_tree_arg = call_node->right;
+
+    while(curr_arg != NULL) {
+        if (curr_tree_arg->type != LISTOP) {
+            /* Last iteration of loop */
+
+            if (curr_tree_arg->type == ID){
+                /* push that arg onto stack */
+                fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", curr_tree_arg->attribute.sval->offset);
+            }
+            else {
+                /* push val onto stack */
+            }
+            
+            break;
+        }
+        
+        if (curr_tree_arg->right->type == ID){
+            /* push that arg onto stack */
+            fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", curr_tree_arg->right->attribute.sval->offset);
+        }
+        else {
+            /* push val onto stack */
+            
+            /* Maybe this:  */
+            /* call gen_expr */
+            /* push value in register at top of stack */
+            fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", curr_tree_arg->right->attribute.sval->offset);
+
+        }
+
+        curr_arg = curr_arg->next;
+        curr_tree_arg = curr_tree_arg->left;
+    }
+}
+
 void gen_write_format() {
     fprintf(OUTFILE, ".LC%d:\n", CURR_IDENT);
     fprintf(OUTFILE, "\t.string \"%d\"\n", CURR_IDENT);
@@ -231,10 +274,11 @@ void gen_stmt(tree_t *node){
         
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
+            /* If right is a func call, call gen_func_call instead of gen_expr */
             gen_expr(node->right, 1);
 
             /* val should be in top register. Move that into mem_loc of var */
-            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n",rnames[top_rstack()], get_byte_offset(node->left));
+            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n",rnames[top_rstack()], VAR_OFFSET + get_byte_offset(node->left));
             
             break;
 

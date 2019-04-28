@@ -38,5 +38,6 @@ node_t *mknode(char *);
 node_t *node_search(node_t *, char *);
 node_t *node_insert(node_t *, char *);
 void node_print(node_t *);
+int num_args(node_t *);
 
 #endif
