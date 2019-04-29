@@ -22,14 +22,15 @@ main:
 	movl	%gs:20, %eax
 	movl	%eax, -12(%ebp)
 	xorl	%eax, %eax
+	movl	$1, -16(%ebp)
 	subl	$8, %esp
-	leal	-16(%ebp), %eax
+	leal	-20(%ebp), %eax
 	pushl	%eax
 	leal	.LC0@GOTOFF(%ebx), %eax
 	pushl	%eax
 	call	__isoc99_scanf@PLT
 	addl	$16, %esp
-	movl	-16(%ebp), %eax
+	movl	-20(%ebp), %eax
 	subl	$8, %esp
 	pushl	%eax
 	leal	.LC1@GOTOFF(%ebx), %eax
@@ -57,5 +58,5 @@ __x86.get_pc_thunk.bx:
 	movl	(%esp), %ebx
 	ret
 	.hidden	__stack_chk_fail_local
-	.ident	"GCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0"
+	.ident	"GCC: (Ubuntu 8.3.0-6ubuntu1) 8.3.0"
 	.section	.note.GNU-stack,"",@progbits

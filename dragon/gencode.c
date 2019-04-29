@@ -90,8 +90,18 @@ void handle_write_call(tree_t *call_node){
 }
 
 void handle_read_call(tree_t *call_node){
+    /**
+     * Process should be:
+     *      leal var address into some register
+     *      push that register
+     *      push format
+     *      call scanf
+     *      add 8 (for now) back to esp
+    */
+
     if (call_node->right->type == ID){
-        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", VAR_OFFSET + get_byte_offset(call_node->right));
+        fprintf(OUTFILE, "\tleal\t-%d(%%ebp), %s\n", VAR_OFFSET + get_byte_offset(call_node->right),  rnames[top_rstack()]);
+        fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
 
         if (call_node->right->attribute.sval->type.super_type == INTEGER) {
             fprintf(OUTFILE, "\tpushl\t$.LC2\n");
@@ -105,8 +115,7 @@ void handle_read_call(tree_t *call_node){
     }
 
     fprintf(OUTFILE, "\tcall\tscanf\n");
-    fprintf(OUTFILE, "\taddl\t$4, %%esp\n");
-    fprintf(OUTFILE, "\tpopl\t-%d(%%ebp)\n", VAR_OFFSET + get_byte_offset(call_node->right));
+    fprintf(OUTFILE, "\taddl\t$8, %%esp\n");
 }
 
 /* Stack Routines */
