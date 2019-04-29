@@ -11,23 +11,41 @@
 moo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$4, %esp
-	movl	$13, %edi
-	movl	%edi, -16(%ebp)
-	pushl	-16(%ebp)
-	pushl	$.LC0
-	call	printf
-	addl	$8, %esp
+	subl	$12, %esp
+	movl	$303, %edi
+	movl	%edi, -28(%ebp)
 	movl	%edi, %eax
-	addl	$4, %esp
+	addl	$12, %esp
+	popl	%ebp
+	ret
+bar:
+	pushl	%ebp
+	movl	%esp, %ebp
+	subl	$16, %esp
+	movl	$202, %edi
+	pushl	%edi
+	movl	%edi, %eax
+	addl	$16, %esp
 	popl	%ebp
 	ret
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$28, %esp
+	subl	$36, %esp
+	movl	$0, %edi
+	movl	%edi, -28(%ebp)
+	pushl	-28(%ebp)
+	pushl	$.LC0
+	call	printf
+	addl	$8, %esp
+	movl	$101, %edi
+	pushl	%edi
+	pushl	-28(%ebp)
+	pushl	$.LC0
+	call	printf
+	addl	$8, %esp
 	movl	%edi, %eax
-	addl	$28, %esp
+	addl	$36, %esp
 	popl	%ebp
 	ret
 main:

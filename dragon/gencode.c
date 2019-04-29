@@ -60,7 +60,7 @@ char *convert_op(tree_t *opnode){
 }
 
 int get_byte_offset(tree_t *id_node){
-    return id_node->attribute.sval->offset*4;
+    return id_node->attribute.sval->offset*4 + VAR_OFFSET;
 }
 
 void handle_write_call(tree_t *call_node){
@@ -219,32 +219,39 @@ void gen_function_call(tree_t *call_node){
 
             if (curr_tree_arg->type == ID){
                 /* push that arg onto stack */
-                fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", curr_tree_arg->attribute.sval->offset);
+
+                fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(curr_tree_arg));
             }
             else {
-                /* push val onto stack */
+                /* Maybe this:  */
+                /* call gen_expr */
+                /* push value in register at top of stack */
+
+                gen_expr(curr_tree_arg, 1);
+                fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
             }
-            
             break;
         }
         
         if (curr_tree_arg->right->type == ID){
             /* push that arg onto stack */
-            fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", curr_tree_arg->right->attribute.sval->offset);
+            fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(curr_tree_arg->right));
         }
         else {
-            /* push val onto stack */
-            
             /* Maybe this:  */
             /* call gen_expr */
             /* push value in register at top of stack */
-            fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", curr_tree_arg->right->attribute.sval->offset);
 
+            gen_expr(curr_tree_arg->right, 1);
+            fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
         }
 
         curr_arg = curr_arg->next;
         curr_tree_arg = curr_tree_arg->left;
     }
+
+    /* Call function */
+    /* Add num_args*4 back to esp */
 }
 
 void gen_write_format() {
@@ -294,8 +301,7 @@ void gen_stmt(tree_t *node){
             }
             else {
                 /* Normal Case */
-                // fprintf(OUTFILE, "\tcall\t%s", node->);
-
+                gen_function_call(node);
             }
             break;
 
@@ -326,8 +332,8 @@ void gen_expr(tree_t *node, int left){
         fprintf(stderr, "GEN_EXPR - CASE 0\n");
         if (node->type == ID) {
             /* EVENTUALLY REPLACE THIS WITH MEM LOCATION OF VAR */
-            // fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %s\n", node->attribute.sval->offset, rnames[top_rstack()]);
-            fprintf(OUTFILE, "\tmovl\t%s, %s\n", node->attribute.sval->name, rnames[top_rstack()]);
+            // fprintf(OUTFILE, "\tmovl\t%s, %s\n", node->attribute.sval->name, rnames[top_rstack()]);
+            fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %s\n", get_byte_offset(node), rnames[top_rstack()]);
         }
         else if (node->type == INUM){
             fprintf(OUTFILE, "\tmovl\t$%d, %s\n", node->attribute.ival, rnames[top_rstack()]);
