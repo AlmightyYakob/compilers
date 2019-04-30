@@ -12,12 +12,23 @@ boo:
 	pushl	%ebp
 	movl	%esp, %ebp
 	subl	$24, %esp
-	leal	-24(%ebp), %edi
+	leal	-16(%ebp), %edi
 	pushl	%edi
 	pushl	$.LC2
 	call	scanf
 	addl	$8, %esp
-	pushl	-24(%ebp)
+	movl	-16(%ebp), %edi
+	movl	-16(%ebp), %eax
+	mul		%edi
+	movl	%eax, %edi
+	movl	$2, %esi
+	movl	-16(%ebp), %eax
+	mul		%esi
+	movl	%eax, %esi
+	subl	%esi, %edi
+	addl	$1, %edi
+	movl	%edi, -16(%ebp)
+	pushl	-16(%ebp)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp

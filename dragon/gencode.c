@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "gencode.h"
 #include "y.tab.h"
 
@@ -44,10 +45,32 @@ char *convert_op(tree_t *opnode){
             break;
 
         case MULOP:
-            /* code */
             fprintf(stderr, "MULOP\n");
-            break;
+            switch (opnode->attribute.opval) {
+                case STAR:
+                    return "mul";
+                    break;
 
+                case SLASH:
+                    /* code */
+                    break;
+
+                case DIV:
+                    /* code */
+                    break;
+
+                case MOD:
+                    /* code */
+                    break;
+
+                case AND:
+                    /* code */
+                    break;
+
+                default:
+                    break;
+            }
+            break;
         case RELOP:
             /* code */
             fprintf(stderr, "RELOP\n");
@@ -60,12 +83,13 @@ char *convert_op(tree_t *opnode){
 }
 
 int get_byte_offset(tree_t *id_node){
+    assert(id_node->type == ID);
     return id_node->attribute.sval->offset*4 + VAR_OFFSET;
 }
 
 void handle_write_call(tree_t *call_node){
     if (call_node->right->type == ID){
-        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", VAR_OFFSET + get_byte_offset(call_node->right));
+        fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(call_node->right));
 
         if (call_node->right->attribute.sval->type.super_type == INTEGER) {
             fprintf(OUTFILE, "\tpushl\t$.LC0\n");
@@ -100,7 +124,7 @@ void handle_read_call(tree_t *call_node){
     */
 
     if (call_node->right->type == ID){
-        fprintf(OUTFILE, "\tleal\t-%d(%%ebp), %s\n", VAR_OFFSET + get_byte_offset(call_node->right),  rnames[top_rstack()]);
+        fprintf(OUTFILE, "\tleal\t-%d(%%ebp), %s\n", get_byte_offset(call_node->right),  rnames[top_rstack()]);
         fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
 
         if (call_node->right->attribute.sval->type.super_type == INTEGER) {
@@ -294,7 +318,7 @@ void gen_stmt(tree_t *node){
             gen_expr(node->right, 1);
 
             /* val should be in top register. Move that into mem_loc of var */
-            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n",rnames[top_rstack()], VAR_OFFSET + get_byte_offset(node->left));
+            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n",rnames[top_rstack()], get_byte_offset(node->left));
             
             break;
 
@@ -326,10 +350,11 @@ void gen_stmt(tree_t *node){
 
 /* AKA gencode, left is 1 to represent its the left child or 0 if not */
 void gen_expr(tree_t *node, int left){
-    /* Replace with action out file */
-    
-    /* To store popped registers */
-    int R;
+    /* Add case for MUL */
+    /* 1st factor is on top of rstack */
+    /* Move 2nd factor to eax */
+    /* call mul on top of stack */
+    /* result is in EDX:EAX. Just movl EAX onto top of stack */
 
     /* To store name of operation */
     char *opname;
@@ -338,6 +363,7 @@ void gen_expr(tree_t *node, int left){
 
     /* Case 0 */
     if (left && node->left == NULL && node->right == NULL){
+        int R;
         fprintf(stderr, "GEN_EXPR - CASE 0\n");
         if (node->type == ID) {
             /* EVENTUALLY REPLACE THIS WITH MEM LOCATION OF VAR */
@@ -353,16 +379,35 @@ void gen_expr(tree_t *node, int left){
     }
     /* Case 1 */
     else if (node->right->label ==  0){
+        int R;
         fprintf(stderr, "GEN_EXPR - CASE 1\n");
         opname = convert_op(node);
+        gen_expr(node->left, 1);
 
-        gen_expr(node->left, 1);    
-        if (node->right->type == ID)        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, node->right->attribute.sval->name, rnames[top_rstack()]);
-        else if (node->right->type == INUM) fprintf(OUTFILE, "\t%s\t$%d, %s\n", opname, node->right->attribute.ival, rnames[top_rstack()]);
-        else if (node->right->type == RNUM) fprintf(OUTFILE, "\t%s\t$%f, %s\n", opname, node->right->attribute.rval, rnames[top_rstack()]);
+        if (node->type == MULOP){
+            /* top of stack has factor 1*/
+            /* move val 2 into eax */
+            fprintf(stderr, "AFTER\n");
+            if      (node->right->type == ID)   fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %%eax\n", get_byte_offset(node->right));
+            else if (node->right->type == INUM) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", node->right->attribute.ival);
+            else if (node->right->type == RNUM) fprintf(OUTFILE, "\tmovl\t$%f, %%eax\n", node->right->attribute.rval);
+
+            /* mul top of stack*/
+            fprintf(OUTFILE, "\tmul\t\t%s\n", rnames[top_rstack()]);
+
+            /* mov eax into val at top of stack */
+            fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", rnames[top_rstack()]);
+
+        }
+        else {
+            if      (node->right->type == ID)   fprintf(OUTFILE, "\t%s\t-%d(%%ebp), %s\n", opname, get_byte_offset(node), rnames[top_rstack()]);
+            else if (node->right->type == INUM) fprintf(OUTFILE, "\t%s\t$%d, %s\n", opname, node->right->attribute.ival, rnames[top_rstack()]);
+            else if (node->right->type == RNUM) fprintf(OUTFILE, "\t%s\t$%f, %s\n", opname, node->right->attribute.rval, rnames[top_rstack()]);
+        }
     }
     /* Case 2 */
     else if (1 <= node->left->label < node->right->label && node->left->label < (top_rstack_i + 1)) {
+        int R;
         fprintf(stderr, "GEN_EXPR - CASE 2\n");
         opname = convert_op(node);
 
@@ -378,6 +423,7 @@ void gen_expr(tree_t *node, int left){
     }
     /* Case 3 */
     else if (1 <= node->right->label <= node->left->label && node->right->label < (top_rstack_i + 1)){
+        int R;
         fprintf(stderr, "GEN_EXPR - CASE 3\n");
         opname = convert_op(node);
 

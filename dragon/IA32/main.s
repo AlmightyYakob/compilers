@@ -22,15 +22,19 @@ main:
 	movl	%gs:20, %eax
 	movl	%eax, -12(%ebp)
 	xorl	%eax, %eax
-	movl	$1, -16(%ebp)
 	subl	$8, %esp
-	leal	-20(%ebp), %eax
+	leal	-16(%ebp), %eax
 	pushl	%eax
 	leal	.LC0@GOTOFF(%ebx), %eax
 	pushl	%eax
 	call	__isoc99_scanf@PLT
 	addl	$16, %esp
-	movl	-20(%ebp), %eax
+	movl	-16(%ebp), %edx
+	movl	%edx, %eax
+	sall	$2, %eax
+	addl	%edx, %eax
+	movl	%eax, -16(%ebp)
+	movl	-16(%ebp), %eax
 	subl	$8, %esp
 	pushl	%eax
 	leal	.LC1@GOTOFF(%ebx), %eax
@@ -38,8 +42,8 @@ main:
 	call	printf@PLT
 	addl	$16, %esp
 	movl	$0, %eax
-	movl	-12(%ebp), %edx
-	xorl	%gs:20, %edx
+	movl	-12(%ebp), %ecx
+	xorl	%gs:20, %ecx
 	je	.L3
 	call	__stack_chk_fail_local
 .L3:

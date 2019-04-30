@@ -41,5 +41,5 @@ main:
 __x86.get_pc_thunk.ax:
 	movl	(%esp), %eax
 	ret
-	.ident	"GCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0"
+	.ident	"GCC: (Ubuntu 8.3.0-6ubuntu1) 8.3.0"
 	.section	.note.GNU-stack,"",@progbits
