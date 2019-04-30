@@ -378,13 +378,50 @@ void gen_stmt(tree_t *node){
             fprintf(OUTFILE, ".LC%d:\n", end_lc);
             break;
         
-        case FOR:
+        case FOR: {
             fprintf(stderr, "GEN_STMT - FOR\n");
+            int start_lc = CURR_IDENT++;
+            int body_lc = CURR_IDENT++;
+            int R;
+            
+            /* Set initial val */
+            gen_stmt(node->left->left);
+
+            fprintf(OUTFILE, "\tjmp\t.LC%d\n", start_lc);
+            fprintf(OUTFILE, ".LC%d:\n", body_lc);
+            gen_stmt(node->right);
+
+            /* increment val */
+            gen_expr(node->left->left->left, 1);
+            fprintf(OUTFILE, "\taddl\t$1, %s\n", rnames[top_rstack()]);
+            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n", rnames[top_rstack()], get_byte_offset(node->left->left->left));
+
+            fprintf(OUTFILE, ".LC%d:\n", start_lc);
+            gen_expr(node->left->right, 1);
+            R = pop_rstack();
+            gen_expr(node->left->left->left, 1);
+
+            /* R contains the expr to check against */
+            /* Top of stack contains the var to check */
+            fprintf(OUTFILE, "\tcmpl\t%s, %s\n", rnames[top_rstack()], rnames[R]);
+            fprintf(OUTFILE, "\tjge\t.LC%d\n", body_lc);
             break;
-        
-        case WHILE:
+        }
+
+        case WHILE: {
             fprintf(stderr, "GEN_STMT - WHILE\n");
+
+            int start_lc = CURR_IDENT++;
+            int body_lc = CURR_IDENT++;
+            
+            fprintf(OUTFILE, "\tjmp\t.LC%d\n", start_lc);
+            fprintf(OUTFILE, ".LC%d:\n", body_lc);
+            gen_stmt(node->right);
+
+            fprintf(OUTFILE, ".LC%d:\n", start_lc);
+            gen_bool_expr(node->left, body_lc);
             break;
+        }
         
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
@@ -466,6 +503,7 @@ void gen_bool_expr(tree_t *node, int then_lc) {
 }
 
 /* AKA gencode, left is 1 to represent its the left child or 0 if not */
+/* Left is always 1 if it is the root of an expression tree */
 void gen_expr(tree_t *node, int left){
     /* To store name of operation */
     char *opname;

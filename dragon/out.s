@@ -17,21 +17,22 @@ boo:
 	pushl	$.LC2
 	call	scanf
 	addl	$8, %esp
-	movl	-16(%ebp), %edi
-	movl	$50, %esi
-	cmpl	%esi, %edi
-	jne	.LC3
-	movl	$1, %esi
-	movl	%esi, -20(%ebp)
-	jmp	.LC4
-.LC3:
-	movl	$0, %esi
-	movl	%esi, -20(%ebp)
+	movl	$1, %edi
+	movl	%edi, -20(%ebp)
+	jmp	.LC3
 .LC4:
 	pushl	-20(%ebp)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp
+	movl	-20(%ebp), %edi
+	addl	$1, %edi
+	movl	%edi, -20(%ebp)
+.LC3:
+	movl	-20(%ebp), %edi
+	movl	-16(%ebp), %esi
+	cmpl	%esi, %edi
+	jle	.LC4
 	movl	%esi, %eax
 	addl	$28, %esp
 	popl	%ebp

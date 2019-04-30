@@ -3,10 +3,9 @@
 
 int main(){
     int x;
-    int y = 12;
+    int y;
     scanf("%d", &x);
-    if (x > (y + 3*2)) {
-        return 0;
+    for(y = -1; y < x; y = y + 3) {
+        printf("%d", y);
     }
-    else return 1;
 }
