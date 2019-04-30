@@ -288,7 +288,8 @@ void gen_function_call(tree_t *call_node){
 }
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
-    /* top of stack has factor 1*/
+    /* mul R --> eax = eax*R */
+    /* result is in EDX:EAX. */
 
     switch(node->attribute.opval) {
         case STAR:
@@ -405,12 +406,6 @@ void gen_stmt(tree_t *node){
 
 /* AKA gencode, left is 1 to represent its the left child or 0 if not */
 void gen_expr(tree_t *node, int left){
-    /* Add case for MUL */
-    /* 1st factor is on top of rstack */
-    /* Move 2nd factor to eax */
-    /* call mul on top of stack */
-    /* result is in EDX:EAX. Just movl EAX onto top of stack */
-
     /* To store name of operation */
     char *opname;
 
@@ -492,8 +487,6 @@ void gen_expr(tree_t *node, int left){
     else {
         fprintf(stderr, "GEN_EXPR - CASE 4\n");
     }
-
-    // print_rstack();
 }
 
 /* Returns 1 if the passed node is a leaf node, else 0. */
