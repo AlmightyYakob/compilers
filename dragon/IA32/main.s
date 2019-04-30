@@ -3,8 +3,6 @@
 	.section	.rodata
 .LC0:
 	.string	"%d"
-.LC1:
-	.string	"%d\n"
 	.text
 	.globl	main
 	.type	main, @function
@@ -17,36 +15,35 @@ main:
 	pushl	%ebx
 	pushl	%ecx
 	subl	$16, %esp
-	call	__x86.get_pc_thunk.bx
-	addl	$_GLOBAL_OFFSET_TABLE_, %ebx
-	movl	%gs:20, %eax
-	movl	%eax, -12(%ebp)
-	xorl	%eax, %eax
+	call	__x86.get_pc_thunk.ax
+	addl	$_GLOBAL_OFFSET_TABLE_, %eax
+	movl	%gs:20, %ecx
+	movl	%ecx, -12(%ebp)
+	xorl	%ecx, %ecx
+	movl	$12, -16(%ebp)
 	subl	$8, %esp
-	leal	-16(%ebp), %eax
-	pushl	%eax
-	leal	.LC0@GOTOFF(%ebx), %eax
-	pushl	%eax
+	leal	-20(%ebp), %edx
+	pushl	%edx
+	leal	.LC0@GOTOFF(%eax), %edx
+	pushl	%edx
+	movl	%eax, %ebx
 	call	__isoc99_scanf@PLT
 	addl	$16, %esp
-	movl	-16(%ebp), %edx
-	movl	%edx, %eax
-	sall	$2, %eax
-	addl	%edx, %eax
-	movl	%eax, -16(%ebp)
 	movl	-16(%ebp), %eax
-	subl	$8, %esp
-	pushl	%eax
-	leal	.LC1@GOTOFF(%ebx), %eax
-	pushl	%eax
-	call	printf@PLT
-	addl	$16, %esp
+	leal	6(%eax), %edx
+	movl	-20(%ebp), %eax
+	cmpl	%eax, %edx
+	jge	.L2
 	movl	$0, %eax
+	jmp	.L4
+.L2:
+	movl	$1, %eax
+.L4:
 	movl	-12(%ebp), %ecx
 	xorl	%gs:20, %ecx
-	je	.L3
+	je	.L5
 	call	__stack_chk_fail_local
-.L3:
+.L5:
 	leal	-8(%ebp), %esp
 	popl	%ecx
 	popl	%ebx
@@ -54,12 +51,12 @@ main:
 	leal	-4(%ecx), %esp
 	ret
 	.size	main, .-main
-	.section	.text.__x86.get_pc_thunk.bx,"axG",@progbits,__x86.get_pc_thunk.bx,comdat
-	.globl	__x86.get_pc_thunk.bx
-	.hidden	__x86.get_pc_thunk.bx
-	.type	__x86.get_pc_thunk.bx, @function
-__x86.get_pc_thunk.bx:
-	movl	(%esp), %ebx
+	.section	.text.__x86.get_pc_thunk.ax,"axG",@progbits,__x86.get_pc_thunk.ax,comdat
+	.globl	__x86.get_pc_thunk.ax
+	.hidden	__x86.get_pc_thunk.ax
+	.type	__x86.get_pc_thunk.ax, @function
+__x86.get_pc_thunk.ax:
+	movl	(%esp), %eax
 	ret
 	.hidden	__stack_chk_fail_local
 	.ident	"GCC: (Ubuntu 8.3.0-6ubuntu1) 8.3.0"

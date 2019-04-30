@@ -358,6 +358,21 @@ void gen_stmt(tree_t *node){
             break;
         case IF:
             fprintf(stderr, "GEN_STMT - IF\n");
+            int then_lc = CURR_IDENT++;
+            int end_lc  = CURR_IDENT++;
+            
+            /* Gen the expr and first cond. jump */
+            gen_bool_expr(node->left, then_lc);
+
+            /* Else case */
+            gen_stmt(node->right->right);
+            fprintf(OUTFILE, "\tjmp\t.LC%d\n", end_lc);
+            
+            /* Then case */
+            fprintf(OUTFILE, ".LC%d:\n", then_lc);
+            gen_stmt(node->right->left);
+
+            fprintf(OUTFILE, ".LC%d:\n", end_lc);
             break;
         
         case FOR:
@@ -399,6 +414,49 @@ void gen_stmt(tree_t *node){
             if (node->left != NULL) gen_stmt(node->left);
             break;
     
+        default:
+            break;
+    }
+}
+
+void gen_bool_expr(tree_t *node, int then_lc) {
+    /* node is root of bool expr to test */
+    /* node->type should be RELOP I think */
+    /* then_lc is the .LCX number to jump to if the comparison is true */
+    int R;
+
+    gen_expr(node->left, 1);
+    R = pop_rstack();
+    gen_expr(node->right, 1);
+    // fprintf(OUTFILE, "\tcmpl\t%s, %s\n", rnames[R], rnames[top_rstack()]);
+    fprintf(OUTFILE, "\tcmpl\t%s, %s\n", rnames[top_rstack()], rnames[R]);
+
+    /* To decide what to test */
+    switch (node->attribute.opval) {
+        case EQ:
+            fprintf(OUTFILE, "\tje\t.LC%d\n", then_lc);
+            break;
+            
+        case NE:
+            fprintf(OUTFILE, "\tjne\t.LC%d\n", then_lc);
+            break;
+
+        case LT:
+            fprintf(OUTFILE, "\tjl\t.LC%d\n", then_lc);
+            break;
+
+        case LE:
+            fprintf(OUTFILE, "\tjle\t.LC%d\n", then_lc);
+            break;
+
+        case GT:
+            fprintf(OUTFILE, "\tjg\t.LC%d\n", then_lc);
+            break;
+
+        case GE:
+            fprintf(OUTFILE, "\tjge\t.LC%d\n", then_lc);
+            break;
+
         default:
             break;
     }

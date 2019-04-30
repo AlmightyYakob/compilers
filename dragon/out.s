@@ -11,41 +11,29 @@
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$44, %esp
-	leal	-20(%ebp), %edi
+	subl	$28, %esp
+	leal	-16(%ebp), %edi
 	pushl	%edi
 	pushl	$.LC2
 	call	scanf
 	addl	$8, %esp
-	leal	-24(%ebp), %edi
-	pushl	%edi
-	pushl	$.LC2
-	call	scanf
-	addl	$8, %esp
-	movl	$3, %esi
-	movl	-24(%ebp), %edi
-	movl	%edi, %eax
-	movl	$3, %edi
-	movl	$0, %edx
-	div		%edi
-	movl	%edx, %edi
-	movl	%esi, %eax
-	mul		%edi
-	movl	%eax, %esi
-	addl	$5, %esi
-	movl	-20(%ebp), %edi
-	movl	%edi, %eax
-	movl	%esi, %edi
-	movl	$0, %edx
-	div		%edi
-	movl	%eax, %edi
-	movl	%edi, -28(%ebp)
-	pushl	-28(%ebp)
+	movl	-16(%ebp), %edi
+	movl	$50, %esi
+	cmpl	%esi, %edi
+	jne	.LC3
+	movl	$1, %esi
+	movl	%esi, -20(%ebp)
+	jmp	.LC4
+.LC3:
+	movl	$0, %esi
+	movl	%esi, -20(%ebp)
+.LC4:
+	pushl	-20(%ebp)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp
-	movl	%edi, %eax
-	addl	$44, %esp
+	movl	%esi, %eax
+	addl	$28, %esp
 	popl	%ebp
 	ret
 main:

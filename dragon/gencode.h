@@ -108,6 +108,7 @@ void gen_mulop(tree_t *node, int case_num, int R, char *return_loc);
 void gen_write_format();
 
 void gen_stmt(tree_t *node);
+void gen_bool_expr(tree_t *node, int then_lc);
 void gen_expr(tree_t *node, int left);
 int leaf_node(tree_t *node);
 int label_node(tree_t *node, int left);

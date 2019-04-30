@@ -2,8 +2,11 @@
 #include <stdlib.h>
 
 int main(){
-    int x, y;
+    int x;
+    int y = 12;
     scanf("%d", &x);
-    x = x*5;
-    printf("%d\n", x);
+    if (x > (y + 3*2)) {
+        return 0;
+    }
+    else return 1;
 }
