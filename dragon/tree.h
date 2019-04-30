@@ -8,6 +8,7 @@
 typedef struct tree_s {
 	int type; 		    /* token type: INUM, RNUM, ID, RELOP, ADDOP, MULOP, SIGNOP, NOT, ... */
 	int label;			/* Number of registers needed */
+	int scope_offset;	/* ONLY ID: Number of scopes to jump when accessing var */
 
 	union {
 		int 	ival;	/* INUM */

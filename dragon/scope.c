@@ -93,6 +93,19 @@ int num_local_vars(scope_t *curr_scope){
     return curr_scope->curr_offset;
 }
 
+int num_scope_jumps(scope_t *top, char *name){
+    scope_t *p = top;
+    node_t *tmp;
+    int num = 0;
+    while(p != NULL) {
+        if ((tmp = scope_search(p, name)) != NULL) break;
+        p = p->next;
+        num++;
+    }
+
+    return num;
+}
+
 
 /* ----------------------------------------------------------------------------- 
  * hashpjw

@@ -66,6 +66,7 @@ tree_t *mkid(node_t *name_ptr) {
 
     tree_t *p = mktree(ID, NULL, NULL);
     p->attribute.sval = name_ptr;
+    p->scope_offset = num_scope_jumps(top_scope, name_ptr->name);
     return p;
 }
 
@@ -641,7 +642,7 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            fprintf(stderr, "[ID: %s [offset: %d] (type: %d)]\n", t->attribute.sval->name, t->attribute.sval->offset, t->attribute.sval->type.super_type);
+            fprintf(stderr, "[ID: %s [offset: %d] [scope_offset: %d] (type: %d)]\n", t->attribute.sval->name, t->attribute.sval->offset, t->scope_offset, t->attribute.sval->type.super_type);
             break;
         
         default:

@@ -29,5 +29,5 @@ node_t        *scope_del(scope_t *top, char *name);
 /* Misc */
 void scope_print(scope_t *current_scope);
 int num_local_vars(scope_t *curr_scope);
-
+int num_scope_jumps(scope_t *top, char *name);
 #endif
