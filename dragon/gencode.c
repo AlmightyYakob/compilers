@@ -56,7 +56,7 @@ char *convert_op(tree_t *opnode){
                     break;
 
                 case DIV:
-                    /* code */
+                    return "div";
                     break;
 
                 case MOD:
@@ -287,6 +287,61 @@ void gen_function_call(tree_t *call_node){
     /* Add num_args*4 back to esp */
 }
 
+void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
+    /* top of stack has factor 1*/
+
+    switch(node->attribute.opval) {
+        case STAR:
+            /* move val 2 into eax */
+            switch(case_num) {
+                case 1:
+                    if      (node->right->type == ID)   fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %%eax\n", get_byte_offset(node->right));
+                    else if (node->right->type == INUM) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", node->right->attribute.ival);
+                    else if (node->right->type == RNUM) fprintf(OUTFILE, "\tmovl\t$%f, %%eax\n", node->right->attribute.rval);
+                    break;
+                case 2:
+                case 3:
+                    fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", rnames[R]);
+                    break;
+            }
+
+            /* mul top of stack*/
+            fprintf(OUTFILE, "\tmul\t\t%s\n", rnames[top_rstack()]);
+            /* mov eax into return_loc */
+            fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", return_loc);
+            break;
+
+        case SLASH:
+            break;
+
+        case DIV:
+        case MOD:
+            switch(case_num) {
+                case 1:
+                case 2:
+                    fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", rnames[top_rstack()]);
+                    if (case_num == 2) fprintf(OUTFILE, "\tmovl\t%s, %s\n", rnames[R], rnames[top_rstack()]);
+                    else if (node->right->type == ID)   fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %s\n", get_byte_offset(node->right), rnames[top_rstack()]);
+                    else if (node->right->type == INUM) fprintf(OUTFILE, "\tmovl\t$%d, %s\n", node->right->attribute.ival, rnames[top_rstack()]);
+                    else if (node->right->type == RNUM) fprintf(OUTFILE, "\tmovl\t$%f, %s\n", node->right->attribute.rval, rnames[top_rstack()]);
+                    break;
+                case 3:
+                    fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", rnames[R]);
+                    break;
+            }
+
+            fprintf(OUTFILE, "\tmovl\t$0, %%edx\n");
+            fprintf(OUTFILE, "\tdiv\t\t%s\n", rnames[top_rstack()]);
+
+            if (node->attribute.opval == MOD)   fprintf(OUTFILE, "\tmovl\t%%edx, %s\n", return_loc);
+            else                                fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", return_loc);
+            break;
+
+        case AND:
+            break;
+    }
+}
+
 void gen_write_format() {
     fprintf(OUTFILE, ".LC%d:\n", CURR_IDENT);
     fprintf(OUTFILE, "\t.string \"%d\"\n", CURR_IDENT);
@@ -363,7 +418,7 @@ void gen_expr(tree_t *node, int left){
 
     /* Case 0 */
     if (left && node->left == NULL && node->right == NULL){
-        int R;
+        int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 0\n");
         if (node->type == ID) {
             /* EVENTUALLY REPLACE THIS WITH MEM LOCATION OF VAR */
@@ -379,35 +434,23 @@ void gen_expr(tree_t *node, int left){
     }
     /* Case 1 */
     else if (node->right->label ==  0){
-        int R;
+        int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 1\n");
         opname = convert_op(node);
         gen_expr(node->left, 1);
 
         if (node->type == MULOP){
-            /* top of stack has factor 1*/
-            /* move val 2 into eax */
-            fprintf(stderr, "AFTER\n");
-            if      (node->right->type == ID)   fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %%eax\n", get_byte_offset(node->right));
-            else if (node->right->type == INUM) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", node->right->attribute.ival);
-            else if (node->right->type == RNUM) fprintf(OUTFILE, "\tmovl\t$%f, %%eax\n", node->right->attribute.rval);
-
-            /* mul top of stack*/
-            fprintf(OUTFILE, "\tmul\t\t%s\n", rnames[top_rstack()]);
-
-            /* mov eax into val at top of stack */
-            fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", rnames[top_rstack()]);
-
+            gen_mulop(node, 1, R, rnames[top_rstack()]);
         }
         else {
-            if      (node->right->type == ID)   fprintf(OUTFILE, "\t%s\t-%d(%%ebp), %s\n", opname, get_byte_offset(node), rnames[top_rstack()]);
+            if      (node->right->type == ID)   fprintf(OUTFILE, "\t%s\t-%d(%%ebp), %s\n", opname, get_byte_offset(node->right), rnames[top_rstack()]);
             else if (node->right->type == INUM) fprintf(OUTFILE, "\t%s\t$%d, %s\n", opname, node->right->attribute.ival, rnames[top_rstack()]);
             else if (node->right->type == RNUM) fprintf(OUTFILE, "\t%s\t$%f, %s\n", opname, node->right->attribute.rval, rnames[top_rstack()]);
         }
     }
     /* Case 2 */
     else if (1 <= node->left->label < node->right->label && node->left->label < (top_rstack_i + 1)) {
-        int R;
+        int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 2\n");
         opname = convert_op(node);
 
@@ -415,22 +458,34 @@ void gen_expr(tree_t *node, int left){
         gen_expr(node->right, 0);
         R = pop_rstack();
         gen_expr(node->left, 1);
-        
-        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, rnames[R], rnames[top_rstack()]);
 
+        if (node->type == MULOP) {
+            gen_mulop(node, 2, R, rnames[top_rstack()]);
+        }
+        else {
+            fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, rnames[R], rnames[top_rstack()]);
+        }
+        
         push_rstack(R);
         swap_rstack();
     }
     /* Case 3 */
     else if (1 <= node->right->label <= node->left->label && node->right->label < (top_rstack_i + 1)){
-        int R;
+        int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 3\n");
         opname = convert_op(node);
 
         gen_expr(node->left, 1);
         R = pop_rstack();
         gen_expr(node->right, 0);
-        fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, rnames[top_rstack()], rnames[R]);
+
+        if (node->type == MULOP) {
+            gen_mulop(node, 3, R, rnames[R]);
+        }
+        else {
+            fprintf(OUTFILE, "\t%s\t%s, %s\n", opname, rnames[top_rstack()], rnames[R]);
+        }
+
         push_rstack(R);
     }
     /* Case 4, ignoring this for now */

@@ -104,6 +104,7 @@ void gen_prologue(char *func_name, int record_size);
 void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val);
 void gen_main(const char *prog_name);
 void gen_function_call(tree_t *call_node);
+void gen_mulop(tree_t *node, int case_num, int R, char *return_loc);
 void gen_write_format();
 
 void gen_stmt(tree_t *node);
