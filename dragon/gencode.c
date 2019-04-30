@@ -292,6 +292,11 @@ void gen_function_call(tree_t *call_node){
     /* All args now pushed onto stack */
     
     /* Move static parent of callee into ecx */
+    /* Still need to store static parent in node or somewhere */
+
+    /* If scope_offset of callee is 1, then its the same func */
+    /* If greater, then its a different func*/
+    /* I THINK */
 
     /* Call function */
     /* Add num_args*VAR_SIZE back to esp */
