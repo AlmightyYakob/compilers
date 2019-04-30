@@ -19,7 +19,9 @@
  * -----------------------------------
  * | Local Variables = 4*numVars    ✓
  * -----------------------------------
- * | Temp Expression Memory = 8 bytes ✓
+ * | Temp Expression Memory = 4 bytes ✓
+ * -----------------------------------
+ * | Static Parent Pointer  = 4 bytes ✓
  * -----------------------------------
  * | Previous Base Pointer          ✓
  * -----------------------------------
@@ -82,7 +84,10 @@ char *rnames[STACK_LENGTH];
 int CURR_IDENT;
 
 /* Offset into the variable portion of the stack */
-int VAR_OFFSET;
+const int VAR_OFFSET;
+
+/* Size of each var/entry in activation record */
+const int VAR_SIZE;
 
 
 char *convert_op(tree_t *opnode);

@@ -8,10 +8,11 @@ extern FILE *OUTFILE;
 extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
 
+const int VAR_OFFSET = 8;
+const int VAR_SIZE = 4;
+
 /* Start at 3 because 0 and 1 used for printf int and float, 2 used for scanf of int */
 int CURR_IDENT = 3;
-
-int VAR_OFFSET = 8;
 
 int top_rstack_i = 2;
 int rstack[STACK_LENGTH] = {0,1,2};
@@ -24,6 +25,7 @@ char *rnames[STACK_LENGTH] = {
 char *convert_op(tree_t *opnode){
     switch (opnode->type){
         case ADDOP:
+        fprintf(stderr, "ADDOP\n");
             switch (opnode->attribute.opval){
                 case PLUS:
                     return "addl";
@@ -77,14 +79,15 @@ char *convert_op(tree_t *opnode){
             break;
     
         default:
-            fprintf(stderr, "DEFAULT CASE IN COVERT_OP\n");
+            fprintf(stderr, "DEFAULT CASE IN COVERT_OP: %d\n", opnode->type);
+            return "???";
             break;
     }
 }
 
 int get_byte_offset(tree_t *id_node){
     assert(id_node->type == ID);
-    return id_node->attribute.sval->offset*4 + VAR_OFFSET;
+    return id_node->attribute.sval->offset*VAR_SIZE + VAR_OFFSET;
 }
 
 void handle_write_call(tree_t *call_node){
@@ -221,6 +224,9 @@ void gen_prologue(char *func_name, int record_size) {
     fprintf(OUTFILE, "\tpushl\t%%ebp\n");
     fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
     if (record_size > 0) fprintf(OUTFILE, "\tsubl\t$%d, %%esp\n", record_size);
+
+    /* Assigning Static Parent */
+    fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
 }
 
 void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val) {
@@ -247,9 +253,8 @@ void gen_function_call(tree_t *call_node){
     tree_t *curr_tree_arg = call_node->right;
 
     while(curr_arg != NULL) {
+        /* Last iteration of loop */
         if (curr_tree_arg->type != LISTOP) {
-            /* Last iteration of loop */
-
             if (curr_tree_arg->type == ID){
                 /* push that arg onto stack */
 
@@ -266,6 +271,7 @@ void gen_function_call(tree_t *call_node){
             break;
         }
         
+        /* Normal Loop Execution */
         if (curr_tree_arg->right->type == ID){
             /* push that arg onto stack */
             fprintf(OUTFILE, "\tpushl\t-%d(%%ebp)\n", get_byte_offset(curr_tree_arg->right));
@@ -283,8 +289,12 @@ void gen_function_call(tree_t *call_node){
         curr_tree_arg = curr_tree_arg->left;
     }
 
+    /* All args now pushed onto stack */
+    
+    /* Move static parent of callee into ecx */
+
     /* Call function */
-    /* Add num_args*4 back to esp */
+    /* Add num_args*VAR_SIZE back to esp */
 }
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
@@ -434,6 +444,7 @@ void gen_stmt(tree_t *node){
             break;
 
         case PROCEDURE_CALL:
+        case  FUNCTION_CALL:
             fprintf(stderr, "GEN_STMT - PROC_CALL\n");
             if (node->left->attribute.sval == BUILTIN_WRITE) {
                 fprintf(stderr, "GEN_STMT - BUILTIN_WRITE\n");

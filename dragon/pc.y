@@ -444,7 +444,7 @@ factor:
             if (!verify_args(scope_search_all(top_scope, $1), $3)) yyerror("Incorrect parameters to function call");
             
             $$ = mktree(FUNCTION_CALL, mkid(scope_search_all(top_scope, $1)), $3);
-            $$->type = scope_search_all(top_scope, $1)->type.super_type;
+            $$->type = FUNCTION_CALL;
         }
     | INUM                          { $$ = mkinum($1); }
     | RNUM                          { $$ = mkrnum($1); }
