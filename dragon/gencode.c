@@ -290,6 +290,9 @@ void gen_function_call(tree_t *call_node){
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
     /* mul R --> eax = eax*R */
     /* result is in EDX:EAX. */
+    /* div R --> eax = eax/R */
+    /* mod R = edx, given above */
+    /* EAX contains result, EDX contains remainder */
 
     switch(node->attribute.opval) {
         case STAR:
