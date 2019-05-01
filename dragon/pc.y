@@ -120,7 +120,7 @@ program:
         int record_size = num_local_vars(top_scope)*4 + VAR_OFFSET;
 
         // gen_prologue($2, record_size);
-        gen_prologue($$->left->left->attribute.sval, record_size);
+        gen_prologue($$->left, record_size);
         gen_stmt($9);
         gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
     }
@@ -204,7 +204,7 @@ subprogram_declaration:
             // int record_size = num_local_vars(top_scope)*4 + max_passed + VAR_OFFSET;
             int record_size = num_local_vars(top_scope)*4 + VAR_OFFSET;
 
-            gen_prologue($1->left->attribute.sval, record_size);
+            gen_prologue($1, record_size);
             gen_stmt($4);
             gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
 

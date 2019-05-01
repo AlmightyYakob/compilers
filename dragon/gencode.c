@@ -242,8 +242,8 @@ void gen_main_footer() {
      fprintf(OUTFILE, "\t.section    .note.GNU-stack,\"\",@progbits\n");
 }
 
-void gen_prologue(node_t *func_node, int record_size) {
-    fprintf(OUTFILE, "%s:\n", func_node->name);
+void gen_prologue(tree_t *func_node, int record_size) {
+    fprintf(OUTFILE, "%s:\n", func_node->left->attribute.sval->name);
     fprintf(OUTFILE, "\tpushl\t%%ebp\n");
     fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
     if (record_size > 0) fprintf(OUTFILE, "\tsubl\t$%d, %%esp\n", record_size);
