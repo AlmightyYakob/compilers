@@ -37,7 +37,7 @@ lex.yy.c: pc.l
 
 
 assemble: out.s
-	$(CC) $(OPTFLAGS) out.s -o $(A_OUT)
+	$(CC) $(FLAGS) $(OPTFLAGS) out.s -o $(A_OUT)
 
 test: tests/test_scope.c
 	$(CC) $(FLAGS) tests/test_scope.c node.c scope.c   
