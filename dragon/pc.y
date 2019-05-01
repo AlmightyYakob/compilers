@@ -207,12 +207,11 @@ subprogram_declaration:
             gen_stmt($4);
             gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
 
+
+
             /* pop current scope */ 
             fprintf(stderr, "-----------POP--------\n");
             top_scope = pop_scope(top_scope);
-
-            /* Put label/gencode here? */
-
         }
     ;
 

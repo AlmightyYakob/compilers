@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "gencode.h"
+#include "scope.h"
 #include "y.tab.h"
 
 extern FILE *OUTFILE;
 extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
+extern scope_t *top_scope;
 
 const int VAR_OFFSET = 8;
 const int VAR_SIZE = 4;
@@ -82,6 +84,23 @@ char *convert_op(tree_t *opnode){
             fprintf(stderr, "DEFAULT CASE IN COVERT_OP: %d\n", opnode->type);
             return "???";
             break;
+    }
+}
+
+/* Determines which register to use for offset */
+char *get_ref_reg(tree_t *id_node) {
+    if (id_node->scope_offset == 0) return "%%ebp";
+    else                            return "%%ecx";
+}
+
+void gen_nonlocal_lookup(tree_t *id_node){
+    if (id_node->scope_offset == 0) return;
+
+    fprintf(OUTFILE, "\tmovl\t-4(%%ebp). %%ecx");
+
+    int i;
+    for (i = 0; i < id_node->scope_offset; i++) {
+        fprintf(OUTFILE, "\tmovl\t(%%ecx). %%ecx");
     }
 }
 
@@ -251,8 +270,10 @@ void gen_function_call(tree_t *call_node){
 
     arg_node_t *curr_arg = call_node->left->attribute.sval->func_arguments;
     tree_t *curr_tree_arg = call_node->right;
+    int num_args = 0;
 
     while(curr_arg != NULL) {
+        num_args++;
         /* Last iteration of loop */
         if (curr_tree_arg->type != LISTOP) {
             if (curr_tree_arg->type == ID){
@@ -291,15 +312,28 @@ void gen_function_call(tree_t *call_node){
 
     /* All args now pushed onto stack */
     
-    /* Move static parent of callee into ecx */
-    /* Still need to store static parent in node or somewhere */
+    /* Scope_search on callee */
+    /* If result == NULL, then callee is child */
+    /* Else, callee is a child */
 
-    /* If scope_offset of callee is 1, then its the same func */
-    /* If greater, then its a different func*/
-    /* I THINK */
+    if (scope_search(top_scope, call_node->left->attribute.sval->name) == NULL) {
+        /* Sibling */
+        /* This means that name of callee is in scope above, since inserted there */
+        /* Pass own static parent to child */
+        fprintf(OUTFILE, "\tmovl\t-4(%%ebp), %%ecx\n");
+    }
+    else {
+        /* Child */
+        /* This means that name of callee is in current scope, and child scope is the callee's scope */
+        /* Pass own base pointer to child */
+        fprintf(OUTFILE, "\tmovl\t%%ebp, %%ecx\n");
+    }
 
     /* Call function */
+    fprintf(OUTFILE, "\tcall\t%s\n", call_node->left->attribute.sval->name);
+    
     /* Add num_args*VAR_SIZE back to esp */
+    fprintf(OUTFILE, "\addl\t$%d, %%esp\n", num_args*VAR_SIZE);
 }
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
