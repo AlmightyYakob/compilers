@@ -117,7 +117,7 @@ program:
         // int max_passed = max_passed_args($9);
         // fprintf(stderr, "MAX PASSED == %d\n", max_passed);
         // int record_size = num_local_vars(top_scope)*4 + max_passed + VAR_OFFSET;
-        int record_size = num_local_vars(top_scope)*4 + VAR_OFFSET;
+        int record_size = num_local_vars(top_scope)*VAR_SIZE + VAR_OFFSET;
 
         // gen_prologue($2, record_size);
         gen_prologue($$->left, record_size);
@@ -202,12 +202,14 @@ subprogram_declaration:
             // int max_passed = max_passed_args($4);
             // fprintf(stderr, "%s: MAX PASSED == %d\n", $1->left->attribute.sval->name, max_passed);
             // int record_size = num_local_vars(top_scope)*4 + max_passed + VAR_OFFSET;
-            int record_size = num_local_vars(top_scope)*4 + VAR_OFFSET;
+            int record_size = num_local_vars(top_scope)*VAR_SIZE + VAR_OFFSET;
 
             gen_prologue($1, record_size);
             gen_stmt($4);
-            gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
 
+            /* NEED TO FIX, PASSING WRONG RETURN_LOC */
+            // gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
+            gen_epilogue(record_size, 0, "%eax", 0);
 
 
             /* pop current scope */ 

@@ -10,7 +10,7 @@ extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
 extern scope_t *top_scope;
 
-const int VAR_OFFSET = 8;
+const int VAR_OFFSET = 12;
 const int VAR_SIZE = 4;
 
 /* Start at 3 because 0 and 1 used for printf int and float, 2 used for scanf of int */
@@ -253,7 +253,29 @@ void gen_prologue(tree_t *func_node, int record_size) {
     fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
 
     /* Copy passed vars into our stack */
-    
+    tree_t *curr_node = func_node->right;
+    int curr_arg = 1;
+    int STATIC_OFFSET = 4;
+    int curr_offset;
+
+    while(curr_node != NULL) {
+        curr_offset = curr_arg*VAR_SIZE+STATIC_OFFSET;
+
+        if (curr_node->type != LISTOP) {
+            /* Last iteration */
+            gen_nonlocal_lookup(curr_node);
+            fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
+            fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node));
+            break;
+        }
+        
+        gen_nonlocal_lookup(curr_node->right);
+        fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
+        fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node->right));
+
+        curr_arg++;
+        curr_node = curr_node->left;
+    }
 }
 
 void gen_main_prologue() {
@@ -262,10 +284,15 @@ void gen_main_prologue() {
     fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
 
     /* Assigning Static Parent */
-    fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
+    // fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
 }
 
 void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val) {
+    /* FIX THIS FUNC */
+    /* returnval_loc SHOULD BE A MEMORY ADDRESS  */
+    /* INSTEAD OF RECORD SIZE, PASS IN FUNC AND COMPUTE */
+    /* FIX ISSUE WITH MAIN BY CREATING GEN_MAIN_EPILOGUE */
+
     if (useVal) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", return_val);
     else fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", returnval_loc);
 
@@ -352,6 +379,9 @@ void gen_function_call(tree_t *call_node){
     
     /* Add num_args*VAR_SIZE back to esp */
     fprintf(OUTFILE, "\taddl\t$%d, %%esp\n", num_args*VAR_SIZE);
+
+    /* Mov return val to top of stack */
+    fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", rnames[top_rstack()]);
 }
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
@@ -422,7 +452,6 @@ void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
 void gen_write_format() {
     fprintf(OUTFILE, ".LC%d:\n", CURR_IDENT);
     fprintf(OUTFILE, "\t.string \"%d\"\n", CURR_IDENT);
-    
 }
 
 /* Wrapper for gen_expr */
@@ -509,8 +538,9 @@ void gen_stmt(tree_t *node){
             
             break;
 
-        case PROCEDURE_CALL:
         case FUNCTION_CALL:
+            fprintf(stderr, "GEN_STMT - FUNC_CALL ++\n");
+        case PROCEDURE_CALL:
             fprintf(stderr, "GEN_STMT - PROC_CALL\n");
             if (node->left->attribute.sval == BUILTIN_WRITE) {
                 fprintf(stderr, "GEN_STMT - BUILTIN_WRITE\n");

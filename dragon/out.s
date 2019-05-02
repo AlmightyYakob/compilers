@@ -8,46 +8,83 @@
 	.text
 	.globl	main
 	.type	main, @function
+factorial:
+	pushl	%ebp
+	movl	%esp, %ebp
+	subl	$16, %esp
+	movl	%ecx, -4(%ebp)
+	movl	%ebp, %ecx
+	movl	8(%ecx), %eax
+	movl	%eax, -12(%ecx)
+	movl	%ebp, %ecx
+	movl	-12(%ecx), %edi
+	movl	$1, %esi
+	cmp		%esi, %edi
+	jle	.LC3
+	movl	%ebp, %ecx
+	movl	-12(%ecx), %ebx
+	subl	$1, %ebx
+	pushl	%ebx
+	movl	-4(%ebp), %ecx
+	call	factorial
+	addl	$4, %esp
+	movl	%eax, %ebx
+	movl	%ebp, %ecx
+	movl	-12(%ecx), %esi
+	movl	%ebx, %eax
+	mul		%esi
+	movl	%eax, %esi
+	movl	%ebp, %ecx
+	movl	-4(%ecx), %ecx
+	movl	%esi, -28(%ecx)
+	jmp	.LC4
+.LC3:
+	movl	$1, %esi
+	movl	%ebp, %ecx
+	movl	-4(%ecx), %ecx
+	movl	%esi, -28(%ecx)
+.LC4:
+	movl	%eax, %eax
+	addl	$16, %esp
+	popl	%ebp
+	ret
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$32, %esp
+	subl	$36, %esp
 	movl	%ecx, -4(%ebp)
 	movl	%ebp, %ecx
-	leal	-16(%ecx), %edi
-	pushl	%edi
+	movl	8(%ecx), %eax
+	movl	%eax, -8(%ecx)
+	movl	%ebp, %ecx
+	movl	12(%ecx), %eax
+	movl	%eax, -8(%ecx)
+	movl	%ebp, %ecx
+	leal	-24(%ecx), %esi
+	pushl	%esi
 	pushl	$.LC2
 	call	scanf
 	addl	$8, %esp
-	movl	%ebp, %ecx
-	leal	-20(%ecx), %edi
-	pushl	%edi
-	pushl	$.LC2
-	call	scanf
-	addl	$8, %esp
-	movl	%ebp, %ecx
-	movl	-16(%ecx), %edi
-	movl	%edi, %eax
-	movl	%ebp, %ecx
-	movl	-20(%ecx), %edi
-	movl	$0, %edx
-	div		%edi
-	movl	%eax, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -24(%ecx)
 	movl	%ebp, %ecx
 	pushl	-24(%ecx)
+	movl	%ebp, %ecx
+	call	factorial
+	addl	$4, %esp
+	movl	%eax, %esi
+	movl	%ebp, %ecx
+	movl	%esi, -20(%ecx)
+	movl	%ebp, %ecx
+	pushl	-20(%ecx)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp
-	movl	%edi, %eax
-	addl	$32, %esp
+	movl	%esi, %eax
+	addl	$36, %esp
 	popl	%ebp
 	ret
 main:
 	pushl	%ebp
 	movl	%esp, %ebp
-	movl	%ecx, -4(%ebp)
 	call	boo
 	movl	$0, %eax
 	popl	%ebp
