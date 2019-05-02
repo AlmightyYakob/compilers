@@ -20,24 +20,12 @@ gcd:
 	movl	12(%ecx), %eax
 	movl	%eax, -12(%ecx)
 	movl	%ebp, %ecx
-	pushl	-12(%ecx)
-	pushl	$.LC0
-	call	printf
-	addl	$8, %esp
-	movl	%ebp, %ecx
-	pushl	-16(%ecx)
-	pushl	$.LC0
-	call	printf
-	addl	$8, %esp
-	pushl	$99
-	pushl	$.LC0
-	call	printf
-	addl	$8, %esp
-	movl	%ebp, %ecx
 	movl	-16(%ecx), %edi
 	movl	$0, %esi
 	cmp		%esi, %edi
 	je	.LC3
+	movl	%ebp, %ecx
+	pushl	-16(%ecx)
 	movl	%ebp, %ecx
 	movl	-12(%ecx), %esi
 	movl	%esi, %eax
@@ -47,8 +35,6 @@ gcd:
 	div		%esi
 	movl	%edx, %esi
 	pushl	%esi
-	movl	%ebp, %ecx
-	pushl	-16(%ecx)
 	movl	-4(%ebp), %ecx
 	call	gcd
 	addl	$8, %esp
@@ -93,9 +79,9 @@ boo:
 	call	scanf
 	addl	$8, %esp
 	movl	%ebp, %ecx
-	pushl	-24(%ecx)
-	movl	%ebp, %ecx
 	pushl	-20(%ecx)
+	movl	%ebp, %ecx
+	pushl	-24(%ecx)
 	movl	%ebp, %ecx
 	call	gcd
 	addl	$8, %esp

@@ -229,6 +229,26 @@ void gen_file_header() {
     fprintf(OUTFILE, "\t.type\tmain, @function\n");
 }
 
+void gen_main(const char *prog_name) {
+    gen_main_prologue();
+    fprintf(OUTFILE, "\tcall\t%s\n", prog_name);
+    gen_main_epilogue();
+}
+
+void gen_main_prologue() {
+    fprintf(OUTFILE, "main:\n");
+    fprintf(OUTFILE, "\tpushl\t%%ebp\n");
+    fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
+
+    /* Assigning Static Parent */
+    // fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
+}
+
+void gen_main_epilogue() {
+    fprintf(OUTFILE, "\tpopl\t%%ebp\n");
+    fprintf(OUTFILE, "\tret\n");
+}
+
 void gen_main_footer() {
      fprintf(OUTFILE, "\t.size   main, .-main\n");
      fprintf(OUTFILE, "\t.section    .text.__x86.get_pc_thunk.ax,\"axG\",@progbits,__x86.get_pc_thunk.ax,comdat\n");
@@ -278,20 +298,6 @@ void gen_prologue(tree_t *func_node, int record_size) {
     }
 }
 
-void gen_main_prologue() {
-    fprintf(OUTFILE, "main:\n");
-    fprintf(OUTFILE, "\tpushl\t%%ebp\n");
-    fprintf(OUTFILE, "\tmovl\t%%esp, %%ebp\n");
-
-    /* Assigning Static Parent */
-    // fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
-}
-
-void gen_main_epilogue() {
-    fprintf(OUTFILE, "\tpopl\t%%ebp\n");
-    fprintf(OUTFILE, "\tret\n");
-}
-
 void gen_epilogue(tree_t *func_node, int record_size) {
     // gen_nonlocal_lookup(func_node->left);
     // fprintf(OUTFILE, "\tmovl\t-%d(%%ecx), %%eax\n", get_byte_offset(func_node->left));
@@ -302,10 +308,25 @@ void gen_epilogue(tree_t *func_node, int record_size) {
     fprintf(OUTFILE, "\tret\n");
 }
 
-void gen_main(const char *prog_name) {
-    gen_main_prologue();
-    fprintf(OUTFILE, "\tcall\t%s\n", prog_name);
-    gen_main_epilogue();
+void gen_push_args(tree_t *arg) {
+    if (arg->type != LISTOP) {
+        /* Base Case*/
+
+        if (arg->type == ID){
+            /* push that arg onto stack */
+            gen_nonlocal_lookup(arg);
+            fprintf(OUTFILE, "\tpushl\t-%d(%%ecx)\n", get_byte_offset(arg));
+        }
+        else {
+            gen_expr(arg, 1);
+            fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
+        }
+        return;
+    }
+    else {
+        gen_push_args(arg->left);
+        gen_push_args(arg->right);
+    }
 }
 
 /* Type of call_node should be either proc_call or func_call */
@@ -315,54 +336,19 @@ void gen_function_call(tree_t *call_node){
     if (call_node->type != PROCEDURE_CALL && call_node->type != FUNCTION_CALL) return;
 
     arg_node_t *curr_arg = call_node->left->attribute.sval->func_arguments;
-    tree_t *curr_tree_arg = call_node->right;
     int num_args = 0;
 
+    /* Count Args */
     while(curr_arg != NULL) {
         num_args++;
-        /* Last iteration of loop */
-        if (curr_tree_arg->type != LISTOP) {
-            if (curr_tree_arg->type == ID){
-                /* push that arg onto stack */
-                gen_nonlocal_lookup(curr_tree_arg);
-                fprintf(OUTFILE, "\tpushl\t-%d(%%ecx)\n", get_byte_offset(curr_tree_arg));
-            }
-            else {
-                /* Maybe this:  */
-                /* call gen_expr */
-                /* push value in register at top of stack */
-
-                gen_expr(curr_tree_arg, 1);
-                fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
-            }
-            break;
-        }
-        
-        /* Normal Loop Execution */
-        if (curr_tree_arg->right->type == ID){
-            /* push that arg onto stack */
-            gen_nonlocal_lookup(curr_tree_arg->right);
-            fprintf(OUTFILE, "\tpushl\t-%d(%%ecx)\n", get_byte_offset(curr_tree_arg->right));
-        }
-        else {
-            /* Maybe this:  */
-            /* call gen_expr */
-            /* push value in register at top of stack */
-
-            gen_expr(curr_tree_arg->right, 1);
-            fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
-        }
-
         curr_arg = curr_arg->next;
-        curr_tree_arg = curr_tree_arg->left;
     }
 
-    /* All args now pushed onto stack */
-    
-    /* Scope_search on callee */
-    /* If result == NULL, then callee is child */
-    /* Else, callee is a child */
+    /* Push arguments onto stack */
+    tree_print(call_node->right);
+    gen_push_args(call_node->right);
 
+    /* All args now pushed onto stack */
     if (scope_search(top_scope, call_node->left->attribute.sval->name) == NULL) {
         /* Sibling */
         /* This means that name of callee is in scope above, since inserted there */

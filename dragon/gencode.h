@@ -104,12 +104,18 @@ void print_rstack();
 
 void gen_format_section();
 void gen_file_header();
-void gen_main_footer();
-void gen_prologue(tree_t *func_node, int record_size);
-void gen_main_prologue();
-void gen_epilogue(tree_t *func_node, int record_size);
+
 void gen_main(const char *prog_name);
+void gen_main_prologue();
+void gen_main_epilogue();
+void gen_main_footer();
+
+void gen_prologue(tree_t *func_node, int record_size);
+void gen_epilogue(tree_t *func_node, int record_size);
+
+void gen_push_args(tree_t *arg);
 void gen_function_call(tree_t *call_node);
+
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc);
 void gen_write_format();
 
