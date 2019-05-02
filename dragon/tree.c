@@ -266,6 +266,7 @@ int eval_type(tree_t *root){
 
 /* Function to update the types of entries in the symbol table */
 tree_t *update_type(tree_t *node, tree_t *type_node){
+    /* SHOULD REALLY REDO THIS FUNC RECURSIVELY */
     /* type is a node whose attribute equals the type */
 
     if (type_node == NULL || node == NULL) return node;
@@ -284,10 +285,6 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
             break;
         
         case ARRAY:
-            /* change this case later*/
-            // type = ARRAY;
-            // type = FOR;
-
             /* Where the type lives in an array type tree */
             type = type_node->right->type;
             isArray = 1;
@@ -306,6 +303,11 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
             if (p->type == ID) {
                 p->attribute.sval->type.super_type = type;
                 p->attribute.sval->type.array = isArray;
+
+                if (isArray) {
+                    p->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
+                    p->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
+                }
             }
             break;
         }
@@ -313,6 +315,11 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
             // fprintf(stderr, "BOTH ID\n");
             p->left->attribute.sval->type.super_type = p->right->attribute.sval->type.super_type = type;
             p->left->attribute.sval->type.array = p->right->attribute.sval->type.array = isArray;
+
+            if (isArray) {
+                p->left->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
+                p->left->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
+            }
             break;
         }
 
@@ -322,14 +329,26 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
             // fprintf(stderr, "###set type == %d###\n", p->right->attribute.sval->type);
             p->right->attribute.sval->type.super_type = type;
             p->right->attribute.sval->type.array = isArray;
+
+            if (isArray) {
+                p->right->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
+                p->right->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
+            }
+
             p = p->left;
         }
         else if (p->right != NULL && p->right->type == LISTOP){
             /* go left and set type of the node_t struct pointed to by attribute.sval */
             // fprintf(stderr, "RIGHT NULL\n");
+            // fprintf(stderr, "###set type == %d###\n", p->left->attribute.sval->type);
             p->left->attribute.sval->type.super_type = type;
             p->left->attribute.sval->type.array = isArray;
-            // fprintf(stderr, "###set type == %d###\n", p->left->attribute.sval->type);
+
+            if (isArray) {
+                p->left->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
+                p->left->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
+            }
+
             p = p->right;
         }
         else {
@@ -544,6 +563,12 @@ int exists_nonlocal_assign(tree_t *node, tree_t *func_id){
     }
 }
 
+int count_id_list(tree_t *root) {
+    if (root->type == ID) return 1;
+    else return count_id_list(root->left) + count_id_list(root->right);
+}
+
+
 /* TREE PRINT */
 void tree_print(tree_t *t){
     fprintf(stderr, "\n---BEGIN PRINT TREE---\n");
@@ -599,8 +624,14 @@ void aux_tree_print(tree_t *t, int spaces){
         case INUM:
             fprintf(stderr, "[INUM: %d]\n", t->attribute.ival);
             break;
+        case INTEGER:
+            fprintf(stderr, "[INTEGER]\n");
+            break;
         case RNUM:
             fprintf(stderr, "[RNUM: %f]\n", t->attribute.rval);
+            break;
+        case REAL:
+            fprintf(stderr, "[REAL]\n");
             break;
         case NOT:
             fprintf(stderr, "[NOT]\n");
@@ -616,6 +647,12 @@ void aux_tree_print(tree_t *t, int spaces){
             break;
         case PROCEDURE_CALL:
             fprintf(stderr, "[PROCEDURE_CALL]\n");
+            break;
+        case ARRAY:
+            fprintf(stderr, "[ARRAY]\n");
+            break;
+        case DOTDOT:
+            fprintf(stderr, "[..]\n");
             break;
         case ARRAY_ACCESS:
             fprintf(stderr, "[ARRAY_ACCESS]\n");
@@ -642,7 +679,9 @@ void aux_tree_print(tree_t *t, int spaces){
             fprintf(stderr, "[ASSIGNOP]\n");
             break;
         case ID:
-            fprintf(stderr, "[ID: %s [offset: %d] [scope_offset: %d] (type: %d)]\n", t->attribute.sval->name, t->attribute.sval->offset, t->scope_offset, t->attribute.sval->type.super_type);
+            fprintf(stderr, "[ID: %s [offset: %d] [scope_offset: %d] (type: %d)]", t->attribute.sval->name, t->attribute.sval->offset, t->scope_offset, t->attribute.sval->type.super_type);
+            if (t->attribute.sval->type.array) fprintf(stderr, "<%d, %d>\n", t->attribute.sval->array_lower_bound, t->attribute.sval->array_upper_bound);
+            else fprintf(stderr, "\n");
             break;
         
         default:

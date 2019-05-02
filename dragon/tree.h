@@ -58,6 +58,9 @@ void print_args(node_t *func_node);
 int exists_return_statement(tree_t *node, tree_t *func_id);
 int exists_nonlocal_assign(tree_t *node, tree_t *func_id);
 
+/* Misc */
+int count_id_list(tree_t *root);
+
 /* Auxiliary */
 void tree_print(tree_t *);
 

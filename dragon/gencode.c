@@ -294,13 +294,14 @@ void gen_prologue(tree_t *func_node, int record_size) {
     fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
 
     /* Copy passed vars into our stack */
-    tree_t *curr_node = func_node->right;
-    int curr_arg = 1;
-    int STATIC_OFFSET = 4;
-    int curr_offset;
-
-    /* Instead of this, gen_get_args(func_node->right, 1); */
     gen_get_args(func_node->right, 1);
+    
+    
+    /* Old way */
+    // tree_t *curr_node = func_node->right;
+    // int curr_arg = 1;
+    // int STATIC_OFFSET = 4;
+    // int curr_offset;
 
     // while(curr_node != NULL) {
     //     curr_offset = curr_arg*VAR_SIZE+STATIC_OFFSET;

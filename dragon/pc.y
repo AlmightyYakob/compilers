@@ -148,13 +148,23 @@ declarations:
     ;
 
 sub_declarations:
-    sub_declarations identifier_list ':' type ';'   { $$ = mktree(LISTOP, $1, update_type($2, $4)); }
-    | identifier_list ':' type ';'                  { $$ = update_type($1, $3); }
+    sub_declarations identifier_list ':' type ';' {
+        $$ = mktree(LISTOP, $1, update_type($2, $4));
+    }
+    | identifier_list ':' type ';' {
+        $$ = update_type($1, $3);
+
+        // if ($3->type == ARRAY) {
+        //     fprintf(stderr, "NUM IDs: %d\n", count_id_list($1));
+        //     /* Fix IDLIST offsets */
+
+        // }
+    }
     ;
 
 type:
     standard_type                                           {$$ = $1; }
-    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = mkarray(mkinum($3), mkinum($3), $8); }
+    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = mkarray(mkinum($3), mkinum($5), $8); tree_print($$);}
     ;
 
 standard_type:
@@ -263,9 +273,16 @@ arguments:
 
 parameter_list:
     identifier_list ':' type
-        {$$ = update_type($1, $3); /* update type information of $1 with $3 */ }
+        {
+            $$ = update_type($1, $3);
+            // fprintf(stderr, "NUM IDs: %d\n", count_id_list($1));
+            /* Add to offset for each ID if type is array */
+        }
     | parameter_list ';' identifier_list ':' type
-        {$$ = mktree(LISTOP, $1, update_type($3, $5));  /* update type info of $3 with $5 */}
+        {
+            $$ = mktree(LISTOP, $1, update_type($3, $5));
+            // fprintf(stderr, "NUM IDs: %d\n", count_id_list($3));
+        }
     ;
 
 compound_statement:
