@@ -10,19 +10,23 @@ extern node_t *BUILTIN_READ;
 extern node_t *BUILTIN_WRITE;
 extern scope_t *top_scope;
 
-const int VAR_OFFSET = 12;
-const int VAR_SIZE = 4;
+/* 4 for static parent, TSTACK_LENGTH*4 for temp mem, and 4 for to account for first pos */
+const int VAR_OFFSET = VAR_SIZE + TSTACK_LENGTH*VAR_SIZE + VAR_SIZE;
 
 /* Start at 3 because 0 and 1 used for printf int and float, 2 used for scanf of int */
 int CURR_IDENT = 3;
 
-int top_rstack_i = 2;
-int rstack[STACK_LENGTH] = {0,1,2};
-char *rnames[STACK_LENGTH] = {
+int top_rstack_i = RSTACK_LENGTH - 1;
+int top_tstack_i = TSTACK_LENGTH - 1;
+
+int rstack[RSTACK_LENGTH] = {0,1,2};
+char *rnames[RSTACK_LENGTH] = {
     "%ebx",
     "%esi",
     "%edi"
 };
+
+int tstack[TSTACK_LENGTH] = {0, 1};
 
 char *convert_op(tree_t *opnode){
     switch (opnode->type){
@@ -175,16 +179,33 @@ int top_rstack() {
 }
 
 int pop_rstack() {
-    if (top_rstack > 0) return rstack[top_rstack_i--];
+    if (top_rstack_i > 0) return rstack[top_rstack_i--];
     else {
-        fprintf(stderr, "CANNOT POP, ONLY 1 REGISTER IN STACK\n");
+        fprintf(stderr, "CANNOT POP, ONLY 1 REGISTER IN RSTACK\n");
         return rstack[top_rstack_i];
     }
 }
 
+int pop_tstack() {
+    if (top_tstack_i > 0) return tstack[top_tstack_i--];
+    else {
+        fprintf(stderr, "CANNOT POP, ONLY 1 REGISTER IN TSTACK\n");
+        return tstack[top_tstack_i];
+    }
+}
+
 void push_rstack(int reg_index) {
-    if (top_rstack_i + 1 < STACK_LENGTH) rstack[++top_rstack_i] = reg_index;
-    else fprintf(stderr, "CANNOT PUSH, MAX REGISTERS IN STACK\n");
+    if (top_rstack_i + 1 < RSTACK_LENGTH) rstack[++top_rstack_i] = reg_index;
+    else fprintf(stderr, "CANNOT PUSH, MAX REGISTERS IN RSTACK\n");
+}
+
+void push_tstack(int t) {
+    if (top_tstack_i + 1 < TSTACK_LENGTH) tstack[++top_tstack_i] = t;
+    else fprintf(stderr, "CANNOT PUSH, MAX REGISTERS IN TSTACK\n");
+}
+
+int get_tstack_offset(int t) {
+    return VAR_SIZE + t*VAR_SIZE + VAR_SIZE;
 }
 
 void swap_rstack() {
@@ -345,7 +366,6 @@ void gen_function_call(tree_t *call_node){
     }
 
     /* Push arguments onto stack */
-    tree_print(call_node->right);
     gen_push_args(call_node->right);
 
     /* All args now pushed onto stack */
@@ -396,6 +416,7 @@ void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
                     break;
                 case 2:
                 case 3:
+                case 4:
                     fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", rnames[R]);
                     break;
             }
@@ -424,6 +445,7 @@ void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
                     else if (node->right->type == RNUM) fprintf(OUTFILE, "\tmovl\t$%f, %s\n", node->right->attribute.rval, rnames[top_rstack()]);
                     break;
                 case 3:
+                case 4:
                     fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", rnames[R]);
                     break;
             }
@@ -608,6 +630,11 @@ void gen_expr(tree_t *node, int left){
 
     label_node(node, 1);
 
+    if (node->type == FUNCTION_CALL) {
+        gen_function_call(node);
+        return;
+    }
+
     /* Case 0 */
     if (left && node->left == NULL && node->right == NULL){
         int R = -1;
@@ -627,14 +654,13 @@ void gen_expr(tree_t *node, int left){
     else if (node->right->label ==  0){
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 1\n");
-        if (node->type == FUNCTION_CALL) {
-            gen_function_call(node);
-            return;
-        }
-
+        // if (node->type == FUNCTION_CALL) {
+        //     gen_function_call(node);
+        //     return;
+        // }
         opname = convert_op(node);
-        gen_expr(node->left, 1);
 
+        gen_expr(node->left, 1);
         if (node->type == MULOP){
             gen_mulop(node, 1, R, rnames[top_rstack()]);
         }
@@ -651,11 +677,10 @@ void gen_expr(tree_t *node, int left){
     else if (1 <= node->left->label < node->right->label && node->left->label < (top_rstack_i + 1)) {
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 2\n");
-        if (node->type == FUNCTION_CALL) {
-            gen_function_call(node);
-            return;
-        }
-
+        // if (node->type == FUNCTION_CALL) {
+        //     gen_function_call(node);
+        //     return;
+        // }
         opname = convert_op(node);
 
         swap_rstack();
@@ -677,11 +702,10 @@ void gen_expr(tree_t *node, int left){
     else if (1 <= node->right->label <= node->left->label && node->right->label < (top_rstack_i + 1)){
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 3\n");
-        if (node->type == FUNCTION_CALL) {
-            gen_function_call(node);
-            return;
-        }
-
+        // if (node->type == FUNCTION_CALL) {
+        //     gen_function_call(node);
+        //     return;
+        // }
         opname = convert_op(node);
 
         gen_expr(node->left, 1);
@@ -699,7 +723,37 @@ void gen_expr(tree_t *node, int left){
     }
     /* Case 4, ignoring this for now */
     else {
+        int T = -1;
+        int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 4\n");
+        // if (node->type == FUNCTION_CALL) {
+        //     gen_function_call(node);
+        //     return;
+        // }
+        
+        gen_expr(node->right, 0);
+        T = pop_tstack();
+
+        fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ebp)\n", rnames[top_rstack()], get_tstack_offset(T));
+
+        gen_expr(node->left, 1);
+        push_tstack(T);
+
+
+        opname = convert_op(node);
+
+        if (node->type == MULOP) {
+            swap_rstack();
+            R = pop_rstack();
+            fprintf(OUTFILE, "\tmovl\t-%d(%%ebp), %s\n", get_tstack_offset(T), rnames[R]);
+
+            gen_mulop(node, 4, R, rnames[R]);
+
+            push_rstack(R);
+        }
+        else {
+            fprintf(OUTFILE, "\t%s\t-%d(%%ebp), %s\n", opname, get_tstack_offset(T), rnames[R]);
+        }
     }
 }
 

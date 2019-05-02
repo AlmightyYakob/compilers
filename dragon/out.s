@@ -8,93 +8,77 @@
 	.text
 	.globl	main
 	.type	main, @function
-gcd:
-	pushl	%ebp
-	movl	%esp, %ebp
-	subl	$20, %esp
-	movl	%ecx, -4(%ebp)
-	movl	%ebp, %ecx
-	movl	8(%ecx), %eax
-	movl	%eax, -16(%ecx)
-	movl	%ebp, %ecx
-	movl	12(%ecx), %eax
-	movl	%eax, -12(%ecx)
-	movl	%ebp, %ecx
-	movl	-16(%ecx), %edi
-	movl	$0, %esi
-	cmp		%esi, %edi
-	je	.LC3
-	movl	%ebp, %ecx
-	pushl	-16(%ecx)
-	movl	%ebp, %ecx
-	movl	-12(%ecx), %esi
-	movl	%esi, %eax
-	movl	%ebp, %ecx
-	movl	-16(%ecx), %esi
-	movl	$0, %edx
-	div		%esi
-	movl	%edx, %esi
-	pushl	%esi
-	movl	-4(%ebp), %ecx
-	call	gcd
-	addl	$8, %esp
-	movl	%ebp, %ecx
-	movl	-4(%ecx), %ecx
-	movl	-28(%ecx), %esi
-	movl	%ebp, %ecx
-	movl	-4(%ecx), %ecx
-	movl	%esi, -28(%ecx)
-	jmp	.LC4
-.LC3:
-	movl	%ebp, %ecx
-	movl	-12(%ecx), %esi
-	movl	%ebp, %ecx
-	movl	-4(%ecx), %ecx
-	movl	%esi, -28(%ecx)
-.LC4:
-	addl	$20, %esp
-	popl	%ebp
-	ret
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$36, %esp
+	subl	$52, %esp
 	movl	%ecx, -4(%ebp)
 	movl	%ebp, %ecx
 	movl	8(%ecx), %eax
-	movl	%eax, -8(%ecx)
+	movl	%eax, -12(%ecx)
 	movl	%ebp, %ecx
 	movl	12(%ecx), %eax
-	movl	%eax, -8(%ecx)
+	movl	%eax, -12(%ecx)
+	movl	$2, %edi
 	movl	%ebp, %ecx
-	leal	-20(%ecx), %esi
-	pushl	%esi
-	pushl	$.LC2
-	call	scanf
-	addl	$8, %esp
+	movl	%edi, -36(%ecx)
+	movl	$1, %edi
 	movl	%ebp, %ecx
-	leal	-24(%ecx), %esi
-	pushl	%esi
-	pushl	$.LC2
-	call	scanf
-	addl	$8, %esp
+	movl	%edi, -40(%ecx)
+	movl	$3, %edi
 	movl	%ebp, %ecx
-	pushl	-20(%ecx)
+	movl	%edi, -44(%ecx)
+	movl	%ebp, %ecx
+	movl	-36(%ecx), %esi
+	movl	%ebp, %ecx
+	movl	-40(%ecx), %edi
+	movl	%ebp, %ecx
+	addl	-44(%ecx), %edi
+	movl	%esi, %eax
+	mul		%edi
+	movl	%eax, %esi
+	movl	%ebp, %ecx
+	movl	-36(%ecx), %edi
+	movl	%ebp, %ecx
+	movl	-40(%ecx), %ebx
+	movl	%ebp, %ecx
+	addl	-44(%ecx), %ebx
+	movl	%edi, %eax
+	mul		%ebx
+	movl	%eax, %edi
+	addl	%esi, %edi
+	movl	%edi, -12(%ebp)
+	movl	%ebp, %ecx
+	movl	-36(%ecx), %esi
+	movl	%ebp, %ecx
+	movl	-40(%ecx), %edi
+	movl	%ebp, %ecx
+	addl	-44(%ecx), %edi
+	movl	%esi, %eax
+	mul		%edi
+	movl	%eax, %esi
+	movl	%ebp, %ecx
+	movl	-36(%ecx), %edi
+	movl	%ebp, %ecx
+	movl	-40(%ecx), %ebx
+	movl	%ebp, %ecx
+	addl	-44(%ecx), %ebx
+	movl	%edi, %eax
+	mul		%ebx
+	movl	%eax, %edi
+	addl	%esi, %edi
+	movl	-12(%ebp), %esi
+	movl	%esi, %eax
+	mul		%edi
+	movl	%eax, %esi
+	movl	%ebp, %ecx
+	movl	%esi, -24(%ecx)
 	movl	%ebp, %ecx
 	pushl	-24(%ecx)
-	movl	%ebp, %ecx
-	call	gcd
-	addl	$8, %esp
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %esi
-	movl	%ebp, %ecx
-	movl	%esi, -20(%ecx)
-	movl	%ebp, %ecx
-	pushl	-20(%ecx)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp
-	addl	$36, %esp
+	addl	$52, %esp
 	popl	%ebp
 	ret
 main:

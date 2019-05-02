@@ -3,7 +3,15 @@
 
 #include "tree.h"
 #include "node.h"
-#define STACK_LENGTH 3
+
+/* How many registers in the stack */
+#define RSTACK_LENGTH 3
+
+/* How many temp memnory locations for large expressions */
+#define TSTACK_LENGTH 2
+
+/* Size of each var/entry in activation record */
+#define VAR_SIZE 4
 
 /*
  * ACTIVATION RECORD LAYOUT
@@ -19,7 +27,9 @@
  * -----------------------------------
  * | Local Variables = 4*numVars    ✓
  * -----------------------------------
- * | Temp Expression Memory = 4 bytes ✓
+ * | Temp Expr Memory 2 = 4 bytes ✓
+ * -----------------------------------
+ * | Temp Expr Memory 1 = 4 bytes ✓
  * -----------------------------------
  * | Static Parent Pointer  = 4 bytes ✓
  * -----------------------------------
@@ -74,11 +84,16 @@
 /* Index of top (end) of rstack */
 int top_rstack_i;
 
+int top_tstack_i;
+
 /* Stores indices to rnames array */
-int rstack[STACK_LENGTH];
+int rstack[RSTACK_LENGTH];
+
+/* Stores integers that represent mem locations */
+int tstack[TSTACK_LENGTH];
 
 /* Stores name of registers to use */
-char *rnames[STACK_LENGTH];
+char *rnames[RSTACK_LENGTH];
 
 /* Stores the current identifier num */
 int CURR_IDENT;
@@ -86,8 +101,6 @@ int CURR_IDENT;
 /* Offset into the variable portion of the stack */
 const int VAR_OFFSET;
 
-/* Size of each var/entry in activation record */
-const int VAR_SIZE;
 
 
 char *convert_op(tree_t *opnode);
