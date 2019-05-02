@@ -2,6 +2,9 @@ program boo( input, output );
  var m,n: integer;
  function gcd(a,b: integer):integer;
  begin
+	write(a);
+	write(b);
+	write(99);
 	if (b = 0) then
 		gcd := a 
 	else

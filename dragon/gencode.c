@@ -310,6 +310,8 @@ void gen_main(const char *prog_name) {
 
 /* Type of call_node should be either proc_call or func_call */
 void gen_function_call(tree_t *call_node){
+    /* NEED TO REVERSE ORDER OF ARGUMENT PUSHING */
+    /* Need to access left instead of right      */
     if (call_node->type != PROCEDURE_CALL && call_node->type != FUNCTION_CALL) return;
 
     arg_node_t *curr_arg = call_node->left->attribute.sval->func_arguments;

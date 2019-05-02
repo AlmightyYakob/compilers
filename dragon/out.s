@@ -20,6 +20,20 @@ gcd:
 	movl	12(%ecx), %eax
 	movl	%eax, -12(%ecx)
 	movl	%ebp, %ecx
+	pushl	-12(%ecx)
+	pushl	$.LC0
+	call	printf
+	addl	$8, %esp
+	movl	%ebp, %ecx
+	pushl	-16(%ecx)
+	pushl	$.LC0
+	call	printf
+	addl	$8, %esp
+	pushl	$99
+	pushl	$.LC0
+	call	printf
+	addl	$8, %esp
+	movl	%ebp, %ecx
 	movl	-16(%ecx), %edi
 	movl	$0, %esi
 	cmp		%esi, %edi
