@@ -127,6 +127,7 @@ void gen_prologue(tree_t *func_node, int record_size);
 void gen_epilogue(tree_t *func_node, int record_size);
 
 void gen_push_args(tree_t *arg);
+int gen_get_args(tree_t *arg, int curr_arg);
 void gen_function_call(tree_t *call_node);
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc);

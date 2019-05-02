@@ -299,24 +299,27 @@ void gen_prologue(tree_t *func_node, int record_size) {
     int STATIC_OFFSET = 4;
     int curr_offset;
 
-    while(curr_node != NULL) {
-        curr_offset = curr_arg*VAR_SIZE+STATIC_OFFSET;
+    /* Instead of this, gen_get_args(func_node->right, 1); */
+    gen_get_args(func_node->right, 1);
 
-        if (curr_node->type != LISTOP) {
-            /* Last iteration */
-            gen_nonlocal_lookup(curr_node);
-            fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
-            fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node));
-            break;
-        }
+    // while(curr_node != NULL) {
+    //     curr_offset = curr_arg*VAR_SIZE+STATIC_OFFSET;
+
+    //     if (curr_node->type != LISTOP) {
+    //         /* Last iteration */
+    //         gen_nonlocal_lookup(curr_node);
+    //         fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
+    //         fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node));
+    //         break;
+    //     }
         
-        gen_nonlocal_lookup(curr_node->right);
-        fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
-        fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node->right));
+    //     gen_nonlocal_lookup(curr_node->right);
+    //     fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
+    //     fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node->right));
 
-        curr_arg++;
-        curr_node = curr_node->left;
-    }
+    //     curr_arg++;
+    //     curr_node = curr_node->left;
+    // }
 }
 
 void gen_epilogue(tree_t *func_node, int record_size) {
@@ -345,8 +348,29 @@ void gen_push_args(tree_t *arg) {
         return;
     }
     else {
-        gen_push_args(arg->left);
         gen_push_args(arg->right);
+        gen_push_args(arg->left);
+    }
+}
+
+/* Returns the arg num that it was */
+int gen_get_args(tree_t *arg, int curr_arg) {
+    int STATIC_OFFSET = 4;
+    int curr_offset = curr_arg*VAR_SIZE+STATIC_OFFSET;
+    int return_arg;
+
+    if (arg->type != LISTOP) {
+        /* Base Case*/
+
+        gen_nonlocal_lookup(arg);
+        fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
+        fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(arg));
+        return curr_arg;
+    }
+    else {
+        return_arg = gen_get_args(arg->left, curr_arg);
+        gen_get_args(arg->right, ++return_arg);
+        return return_arg;
     }
 }
 
