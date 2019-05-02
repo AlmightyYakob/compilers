@@ -143,22 +143,35 @@ identifier_list:
     ;
 
 declarations:
-    declarations VAR sub_declarations       {$$ = mktree(LISTOP, $1, $3); }
+    declarations VAR sub_declarations       {$$ = mktree(LISTOP, $1, $3);}
     | /* empty */                           {$$ = NULL; }
     ;
 
 sub_declarations:
     sub_declarations identifier_list ':' type ';' {
         $$ = mktree(LISTOP, $1, update_type($2, $4));
+        
+        if ($4->type == ARRAY) {
+            int size = $4->left->right->attribute.ival - $4->left->left->attribute.ival + 1;
+            fprintf(stderr, "------ARRAY----\n");
+            fprintf(stderr, "Size: %d\n", size);
+            fprintf(stderr, "Offset before: %d\n", top_scope->curr_offset);
+            top_scope->curr_offset = fix_offset_for_array($2, size);
+            fprintf(stderr, "Offset after: %d\n", top_scope->curr_offset);
+        }
     }
     | identifier_list ':' type ';' {
+        fprintf(stderr,"SUB DECLARTAIONS 2\n");
         $$ = update_type($1, $3);
 
-        // if ($3->type == ARRAY) {
-        //     fprintf(stderr, "NUM IDs: %d\n", count_id_list($1));
-        //     /* Fix IDLIST offsets */
-
-        // }
+        if ($3->type == ARRAY) {
+            int size = $3->left->right->attribute.ival - $3->left->left->attribute.ival + 1;
+            fprintf(stderr, "------ARRAY----\n");
+            fprintf(stderr, "Size: %d\n", size);
+            fprintf(stderr, "Offset before: %d\n", top_scope->curr_offset);
+            top_scope->curr_offset = fix_offset_for_array($1, size);
+            fprintf(stderr, "Offset after: %d\n", top_scope->curr_offset);
+        }
     }
     ;
 
@@ -370,6 +383,10 @@ variable:
       ID
         {
             $$ = mkid(scope_search_all(top_scope, $1));
+
+            if ($$->attribute.sval->type.array) {
+                yyerror("No index passed to array variable");
+            }
         }
     | ID '[' expression ']'
         {

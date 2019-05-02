@@ -181,43 +181,20 @@ int eval_type(tree_t *root){
     if (root == NULL) return ERROR;
     int other_type;
 
-    // fprintf(stderr, "EVAL_TYPE\n");
     switch (root->type){
         case ID:
-            /* set super_type of ID to the symbol table entry */
-            // fprintf(stderr, "ID->name == %s\n", root->attribute.sval->name);
-            // fprintf(stderr, "ID\n");
             return root->attribute.sval->type.super_type;
         case RELOP:
-            /*
-             * Check that both children are same type.
-             * If so, return bool.
-             * Else, return error.
-             */
-            // fprintf(stderr, "RELOP\n");
             if (eval_type(root->left) == eval_type(root->right)){
                 return BOOL;
             }
             else return ERROR;
         case ADDOP:
         case MULOP:
-            /* --ADDOP MULOP--
-             * Check that both children are same type.
-             * If so, return that type.
-             * Else, return error.
-             */
-            // fprintf(stderr, "ADDOP/RELOP\n");
             if ((other_type = eval_type(root->left)) == eval_type(root->right)){
-                // return eval_type(root->left);
                 return other_type;
             }
             else{
-                // fprintf(stderr, "ERROR\n");
-                // fprintf(stderr, "LEFT CHILD TYPE == %d\n", super_type(root->left));
-                // fprintf(stderr, "RIGHT CHILD TYPE == %d\n", super_type(root->right));
-                // fprintf(stderr, "LEFT CHILD TREE TYPE == %d\n", tree_node_type(root->left));
-                // fprintf(stderr, "RIGHT CHILD TREE TYPE == %d\n", tree_node_type(root->right));
-
                 return ERROR;
             }
         case INTEGER:
@@ -227,25 +204,11 @@ int eval_type(tree_t *root){
             return INTEGER;
         case REAL:
         case RNUM:
-            /* return REAL */
-            // fprintf(stderr, "REAL\n");
             return REAL;
         case ARRAY_ACCESS:
-            // eval_type(root->left);
-            // eval_type(root->right);
-
-            // fprintf(stderr, "ARRAY ACCESS\n");
-            // fprintf(stderr, "LEFT CHILD TYPE == %d\n", super_type(root->left));
-            // fprintf(stderr, "RIGHT CHILD TYPE == %d\n", super_type(root->right));
-            // fprintf(stderr, "LEFT CHILD TREE TYPE == %d\n", tree_node_type(root->left));
-            // fprintf(stderr, "RIGHT CHILD TREE TYPE == %d\n", tree_node_type(root->right));
-
-            // root->type->super_type = super_type(root->left);
-            // fprintf(stderr, "ARRAY_ACCESS\n");s
             return root->left->attribute.sval->type.super_type;
         case FUNCTION_CALL:
         case PROCEDURE_CALL:
-            // fprintf(stderr, "PROC/FUNC CALL\n");
             return root->left->attribute.sval->type.super_type;
 
         case NOT:
@@ -266,17 +229,20 @@ int eval_type(tree_t *root){
 
 /* Function to update the types of entries in the symbol table */
 tree_t *update_type(tree_t *node, tree_t *type_node){
-    /* SHOULD REALLY REDO THIS FUNC RECURSIVELY */
-    /* type is a node whose attribute equals the type */
-
     if (type_node == NULL || node == NULL) return node;
 
-    tree_t *p = node;
     int isArray = 0;
     int type;
 
-    switch (type_node->type)
-    {
+    if (node->type != ID) {
+        update_type(node->left, type_node);
+        update_type(node->right, type_node);
+
+        /* Original node */
+        return node;
+    }
+
+    switch (type_node->type) {
         case INTEGER:
             type = INTEGER;
             break;
@@ -286,6 +252,7 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
         
         case ARRAY:
             /* Where the type lives in an array type tree */
+            fprintf(stderr, "UPDATE TYPE ARRAY\n");
             type = type_node->right->type;
             isArray = 1;
             break;
@@ -294,68 +261,11 @@ tree_t *update_type(tree_t *node, tree_t *type_node){
             break;
     }
 
-    // fprintf(stderr, "---type == %d---\n", type);
-
-    while (p != NULL){
-        // fprintf(stderr, "IN LOOP\n");
-        if (p->left == NULL && p->right == NULL) {
-            // fprintf(stderr, "BOTH NULL\n");
-            if (p->type == ID) {
-                p->attribute.sval->type.super_type = type;
-                p->attribute.sval->type.array = isArray;
-
-                if (isArray) {
-                    p->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
-                    p->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
-                }
-            }
-            break;
-        }
-        else if (p->left->type == ID && p->right->type == ID){
-            // fprintf(stderr, "BOTH ID\n");
-            p->left->attribute.sval->type.super_type = p->right->attribute.sval->type.super_type = type;
-            p->left->attribute.sval->type.array = p->right->attribute.sval->type.array = isArray;
-
-            if (isArray) {
-                p->left->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
-                p->left->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
-            }
-            break;
-        }
-
-        if (p->left != NULL && p->left->type == LISTOP){
-            /* go right and set type of the node_t struct pointed to by attribute.sval */
-            // fprintf(stderr, "LEFT NULL\n");
-            // fprintf(stderr, "###set type == %d###\n", p->right->attribute.sval->type);
-            p->right->attribute.sval->type.super_type = type;
-            p->right->attribute.sval->type.array = isArray;
-
-            if (isArray) {
-                p->right->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
-                p->right->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
-            }
-
-            p = p->left;
-        }
-        else if (p->right != NULL && p->right->type == LISTOP){
-            /* go left and set type of the node_t struct pointed to by attribute.sval */
-            // fprintf(stderr, "RIGHT NULL\n");
-            // fprintf(stderr, "###set type == %d###\n", p->left->attribute.sval->type);
-            p->left->attribute.sval->type.super_type = type;
-            p->left->attribute.sval->type.array = isArray;
-
-            if (isArray) {
-                p->left->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
-                p->left->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
-            }
-
-            p = p->right;
-        }
-        else {
-            // if (p->left != NULL) fprintf(stderr, "LEFT == %d\n", p->left->type);
-            // if (p->right != NULL) fprintf(stderr, "RIGHT == %d\n", p->right->type);
-            break;
-        }
+    node->attribute.sval->type.super_type = type;
+    node->attribute.sval->type.array = isArray;
+    if (isArray) {
+        node->attribute.sval->array_lower_bound = type_node->left->left->attribute.ival;
+        node->attribute.sval->array_upper_bound = type_node->left->right->attribute.ival;
     }
 
     /* Original node */
@@ -568,6 +478,22 @@ int count_id_list(tree_t *root) {
     else return count_id_list(root->left) + count_id_list(root->right);
 }
 
+int fix_offset_for_array(tree_t *id_node, int size) {
+    /* Size is upper - lower + 1 (total size of array) */
+    /* Return val is the next usable offset */
+
+    if (id_node->left == NULL && id_node->right == NULL) {
+        /* Base Case */
+        return id_node->attribute.sval->offset + size;
+    }
+    else {
+        int left = fix_offset_for_array(id_node->left, size);
+        id_node->right->attribute.sval->offset = left;
+
+        return id_node->right->attribute.sval->offset + size;
+    }
+}
+
 
 /* TREE PRINT */
 void tree_print(tree_t *t){
@@ -680,7 +606,9 @@ void aux_tree_print(tree_t *t, int spaces){
             break;
         case ID:
             fprintf(stderr, "[ID: %s [offset: %d] [scope_offset: %d] (type: %d)]", t->attribute.sval->name, t->attribute.sval->offset, t->scope_offset, t->attribute.sval->type.super_type);
-            if (t->attribute.sval->type.array) fprintf(stderr, "<%d, %d>\n", t->attribute.sval->array_lower_bound, t->attribute.sval->array_upper_bound);
+            if (t->attribute.sval->type.array) { 
+                fprintf(stderr, "<%d, %d>\n", t->attribute.sval->array_lower_bound, t->attribute.sval->array_upper_bound);
+            }
             else fprintf(stderr, "\n");
             break;
         

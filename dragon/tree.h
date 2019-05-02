@@ -60,6 +60,7 @@ int exists_nonlocal_assign(tree_t *node, tree_t *func_id);
 
 /* Misc */
 int count_id_list(tree_t *root);
+int fix_offset_for_array(tree_t *id_node, int size);
 
 /* Auxiliary */
 void tree_print(tree_t *);

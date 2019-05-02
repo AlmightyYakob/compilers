@@ -295,32 +295,6 @@ void gen_prologue(tree_t *func_node, int record_size) {
 
     /* Copy passed vars into our stack */
     gen_get_args(func_node->right, 1);
-    
-    
-    /* Old way */
-    // tree_t *curr_node = func_node->right;
-    // int curr_arg = 1;
-    // int STATIC_OFFSET = 4;
-    // int curr_offset;
-
-    // while(curr_node != NULL) {
-    //     curr_offset = curr_arg*VAR_SIZE+STATIC_OFFSET;
-
-    //     if (curr_node->type != LISTOP) {
-    //         /* Last iteration */
-    //         gen_nonlocal_lookup(curr_node);
-    //         fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
-    //         fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node));
-    //         break;
-    //     }
-        
-    //     gen_nonlocal_lookup(curr_node->right);
-    //     fprintf(OUTFILE, "\tmovl\t%d(%%ecx), %%eax\n", curr_offset);
-    //     fprintf(OUTFILE, "\tmovl\t%%eax, -%d(%%ecx)\n", get_byte_offset(curr_node->right));
-
-    //     curr_arg++;
-    //     curr_node = curr_node->left;
-    // }
 }
 
 void gen_epilogue(tree_t *func_node, int record_size) {
@@ -567,7 +541,7 @@ void gen_stmt(tree_t *node){
         
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
-            /* If right is a func call, call gen_func_call instead of gen_expr */
+            /* ADD IN ARRAY ACCESS FOR LEFT */
             gen_expr(node->right, 1);
 
             /* val should be in top register. Move that into mem_loc of var */
@@ -666,6 +640,9 @@ void gen_expr(tree_t *node, int left){
         fprintf(stderr, "GEN_EXPR - CASE 0\n");
         if (node->type == ID) {
             gen_nonlocal_lookup(node);
+            if (ARRAY) {
+                /* Use index */
+            }
             fprintf(OUTFILE, "\tmovl\t-%d(%%ecx), %s\n", get_byte_offset(node), rnames[top_rstack()]);
         }
         else if (node->type == INUM){
