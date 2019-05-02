@@ -122,7 +122,7 @@ program:
         // gen_prologue($2, record_size);
         gen_prologue($$->left, record_size);
         gen_stmt($9);
-        gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
+        gen_epilogue($$->left, record_size);
     }
     ;
 
@@ -206,10 +206,7 @@ subprogram_declaration:
 
             gen_prologue($1, record_size);
             gen_stmt($4);
-
-            /* NEED TO FIX, PASSING WRONG RETURN_LOC */
-            // gen_epilogue(record_size, 0, rnames[top_rstack()], 0);
-            gen_epilogue(record_size, 0, "%eax", 0);
+            gen_epilogue($1, record_size);
 
 
             /* pop current scope */ 

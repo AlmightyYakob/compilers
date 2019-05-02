@@ -287,14 +287,14 @@ void gen_main_prologue() {
     // fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
 }
 
-void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_val) {
-    /* FIX THIS FUNC */
-    /* returnval_loc SHOULD BE A MEMORY ADDRESS  */
-    /* INSTEAD OF RECORD SIZE, PASS IN FUNC AND COMPUTE */
-    /* FIX ISSUE WITH MAIN BY CREATING GEN_MAIN_EPILOGUE */
+void gen_main_epilogue() {
+    fprintf(OUTFILE, "\tpopl\t%%ebp\n");
+    fprintf(OUTFILE, "\tret\n");
+}
 
-    if (useVal) fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", return_val);
-    else fprintf(OUTFILE, "\tmovl\t%s, %%eax\n", returnval_loc);
+void gen_epilogue(tree_t *func_node, int record_size) {
+    // gen_nonlocal_lookup(func_node->left);
+    // fprintf(OUTFILE, "\tmovl\t-%d(%%ecx), %%eax\n", get_byte_offset(func_node->left));
 
     if (record_size > 0) fprintf(OUTFILE, "\taddl\t$%d, %%esp\n", record_size);
 
@@ -305,7 +305,7 @@ void gen_epilogue(int record_size, int useVal, char *returnval_loc, int return_v
 void gen_main(const char *prog_name) {
     gen_main_prologue();
     fprintf(OUTFILE, "\tcall\t%s\n", prog_name);
-    gen_epilogue(0, 1, NULL, 0);
+    gen_main_epilogue();
 }
 
 /* Type of call_node should be either proc_call or func_call */
@@ -381,7 +381,10 @@ void gen_function_call(tree_t *call_node){
     fprintf(OUTFILE, "\taddl\t$%d, %%esp\n", num_args*VAR_SIZE);
 
     /* Mov return val to top of stack */
-    fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", rnames[top_rstack()]);
+    /* Could either use return val in EAX or in location of func id */
+    // fprintf(OUTFILE, "\tmovl\t%%eax, %s\n", rnames[top_rstack()]);
+    gen_nonlocal_lookup(call_node->left);
+    fprintf(OUTFILE, "\tmovl\t-%d(%%ecx), %s\n", get_byte_offset(call_node->left), rnames[top_rstack()]);
 }
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
