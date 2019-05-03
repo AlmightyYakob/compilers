@@ -403,8 +403,8 @@ variable:
                 yyerror("Array Access with non-integer type");
             }
 
-            /* maybe needs to be updated, to include expression? */
-            $$ = mkid(scope_search_all(top_scope, $1)); 
+            // $$ = mkid(scope_search_all(top_scope, $1)); 
+            $$ = mktree(ARRAY_ACCESS, mkid(scope_search_all(top_scope, $1)), $3);
         }
     ;
 

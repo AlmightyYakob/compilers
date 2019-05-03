@@ -105,6 +105,7 @@ const int VAR_OFFSET;
 
 char *convert_op(tree_t *opnode);
 int get_byte_offset(tree_t *id_node);
+void gen_array_access(tree_t *access_node);
 
 void handle_write_call(tree_t *call_node);
 void handle_read_call(tree_t *call_node);

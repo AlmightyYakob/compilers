@@ -115,7 +115,27 @@ int get_byte_offset(tree_t *id_node){
     return id_node->attribute.sval->offset*VAR_SIZE + VAR_OFFSET;
 }
 
+/* Array element location will be stored in ecx after this call */
+void gen_array_access(tree_t *access_node) {
+    gen_expr(access_node->right, 1);
+    
+    /* Top of stack now contains index, R contains expression to assign to ID[index] */
+    /* Multiply index by 4 */
+    fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", VAR_SIZE);
+    fprintf(OUTFILE, "\tmul\t\t%s\n", rnames[top_rstack()]);
+
+    /* Add offset from first element of array and index offset */
+    fprintf(OUTFILE, "\taddl\t$%d, %%eax\n", get_byte_offset(access_node->left));
+
+    /* EAX now contains offset from base pointer, to element in array */
+    gen_nonlocal_lookup(access_node->left);
+    fprintf(OUTFILE, "\tsubl\t%%eax, %%ecx\n");
+}
 void handle_write_call(tree_t *call_node){
+    /* ------------------------------------------------------------------------------------------------------------------------------------------- */
+    /* REPLACE ALL THESE IFS WITH JUST 1 call to gen_expr */
+    /* Inner ifs for pushing formats need to stay though */
+
     if (call_node->right->type == ID){
         gen_nonlocal_lookup(call_node->right);
         fprintf(OUTFILE, "\tpushl\t-%d(%%ecx)\n", get_byte_offset(call_node->right));
@@ -124,6 +144,17 @@ void handle_write_call(tree_t *call_node){
             fprintf(OUTFILE, "\tpushl\t$.LC0\n");
         }
         else if (call_node->right->attribute.sval->type.super_type == REAL) {
+            fprintf(OUTFILE, "\tpushl\t$.LC1\n");
+        }
+    }
+    else if (call_node->right->type == ARRAY_ACCESS) {
+        gen_array_access(call_node->right);
+        fprintf(OUTFILE, "\tpushl\t(%%ecx)\n");
+
+        if (call_node->right->left->attribute.sval->type.super_type == INTEGER) {
+            fprintf(OUTFILE, "\tpushl\t$.LC0\n");
+        }
+        else if (call_node->right->left->attribute.sval->type.super_type == REAL) {
             fprintf(OUTFILE, "\tpushl\t$.LC1\n");
         }
     }
@@ -541,12 +572,20 @@ void gen_stmt(tree_t *node){
         
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
-            /* ADD IN ARRAY ACCESS FOR LEFT */
-            gen_expr(node->right, 1);
+            gen_expr(node->right, 1);   
+            if (node->left->type == ARRAY_ACCESS) {
+                /* Save result of gen_expr(right) */
+                int R = pop_rstack();
 
-            /* val should be in top register. Move that into mem_loc of var */
-            gen_nonlocal_lookup(node->left);
-            fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ecx)\n",rnames[top_rstack()], get_byte_offset(node->left));
+                gen_array_access(node->left);
+                fprintf(OUTFILE, "\tmovl\t%s, (%%ecx)\n",rnames[R]);
+                push_rstack(R);
+            }
+            else {
+                gen_nonlocal_lookup(node->left);
+                /* val should be in top register. Move that into mem_loc of var */
+                fprintf(OUTFILE, "\tmovl\t%s, -%d(%%ecx)\n",rnames[top_rstack()], get_byte_offset(node->left));
+            }
             
             break;
 
@@ -633,16 +672,17 @@ void gen_expr(tree_t *node, int left){
         gen_function_call(node);
         return;
     }
+    else if (node->type == ARRAY_ACCESS) {
+        /* Add in */
+    }
 
     /* Case 0 */
     if (left && node->left == NULL && node->right == NULL){
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 0\n");
+
         if (node->type == ID) {
             gen_nonlocal_lookup(node);
-            if (ARRAY) {
-                /* Use index */
-            }
             fprintf(OUTFILE, "\tmovl\t-%d(%%ecx), %s\n", get_byte_offset(node), rnames[top_rstack()]);
         }
         else if (node->type == INUM){
@@ -656,10 +696,6 @@ void gen_expr(tree_t *node, int left){
     else if (node->right->label ==  0){
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 1\n");
-        // if (node->type == FUNCTION_CALL) {
-        //     gen_function_call(node);
-        //     return;
-        // }
         opname = convert_op(node);
 
         gen_expr(node->left, 1);
@@ -679,10 +715,6 @@ void gen_expr(tree_t *node, int left){
     else if (1 <= node->left->label < node->right->label && node->left->label < (top_rstack_i + 1)) {
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 2\n");
-        // if (node->type == FUNCTION_CALL) {
-        //     gen_function_call(node);
-        //     return;
-        // }
         opname = convert_op(node);
 
         swap_rstack();
@@ -704,10 +736,6 @@ void gen_expr(tree_t *node, int left){
     else if (1 <= node->right->label <= node->left->label && node->right->label < (top_rstack_i + 1)){
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 3\n");
-        // if (node->type == FUNCTION_CALL) {
-        //     gen_function_call(node);
-        //     return;
-        // }
         opname = convert_op(node);
 
         gen_expr(node->left, 1);
@@ -728,10 +756,6 @@ void gen_expr(tree_t *node, int left){
         int T = -1;
         int R = -1;
         fprintf(stderr, "GEN_EXPR - CASE 4\n");
-        // if (node->type == FUNCTION_CALL) {
-        //     gen_function_call(node);
-        //     return;
-        // }
         
         gen_expr(node->right, 0);
         T = pop_tstack();
