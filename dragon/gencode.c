@@ -131,6 +131,7 @@ void gen_array_access(tree_t *access_node) {
     gen_nonlocal_lookup(access_node->left);
     fprintf(OUTFILE, "\tsubl\t%%eax, %%ecx\n");
 }
+
 void handle_write_call(tree_t *call_node){
     /* ------------------------------------------------------------------------------------------------------------------------------------------- */
     /* REPLACE ALL THESE IFS WITH JUST 1 call to gen_expr */
@@ -552,6 +553,7 @@ void gen_stmt(tree_t *node){
             /* Top of stack contains the var to check */
             fprintf(OUTFILE, "\tcmp\t\t%s, %s\n", rnames[top_rstack()], rnames[R]);
             fprintf(OUTFILE, "\tjge\t.LC%d\n", body_lc);
+            push_rstack(R);
             break;
         }
 
@@ -658,12 +660,14 @@ void gen_bool_expr(tree_t *node, int then_lc) {
         default:
             break;
     }
+
+    push_rstack(R);
 }
 
 /* AKA gencode, left is 1 to represent its the left child or 0 if not */
 /* Left is always 1 if it is the root of an expression tree */
 void gen_expr(tree_t *node, int left){
-    /* To store name of operation */
+    /* To store name of operation to safely allowto safely allow */
     char *opname;
 
     label_node(node, 1);
@@ -674,6 +678,10 @@ void gen_expr(tree_t *node, int left){
     }
     else if (node->type == ARRAY_ACCESS) {
         /* Add in */
+        fprintf(stderr, "ASDASDASDASD________))))AQ#$(!#($&*\n");
+        gen_array_access(node);
+        fprintf(OUTFILE, "\tmovl\t%%ecx, %s\n", rnames[top_rstack()]);
+        return;
     }
 
     /* Case 0 */
