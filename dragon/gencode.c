@@ -139,39 +139,32 @@ void handle_write_call(tree_t *call_node){
     /* ------------------------------------------------------------------------------------------------------------------------------------------- */
     /* REPLACE ALL THESE IFS WITH JUST 1 call to gen_expr */
     /* Inner ifs for pushing formats need to stay though */
+    int type;
 
-    if (call_node->right->type == ID){
-        gen_nonlocal_lookup(call_node->right);
-        fprintf(OUTFILE, "\tpushl\t-%d(%%ecx)\n", get_byte_offset(call_node->right));
+    switch (call_node->right->type) {
+        case ID:
+            type = call_node->right->attribute.sval->type.super_type;
+            break;
+        case ARRAY_ACCESS:
+            type = call_node->right->left->attribute.sval->type.super_type;
+            break;
+        case INUM:
+            type = INTEGER;
+            break;
+        case RNUM:
+            type = REAL;
+            break;
+    
+        default:
+            type = -1;
+            break;
+    }
 
-        if (call_node->right->attribute.sval->type.super_type == INTEGER) {
-            fprintf(OUTFILE, "\tpushl\t$.LC0\n");
-        }
-        else if (call_node->right->attribute.sval->type.super_type == REAL) {
-            fprintf(OUTFILE, "\tpushl\t$.LC1\n");
-        }
-    }
-    else if (call_node->right->type == ARRAY_ACCESS) {
-        gen_array_access(call_node->right);
-        fprintf(OUTFILE, "\tpushl\t(%%ecx)\n");
+    gen_expr(call_node->right, 1);
+    fprintf(OUTFILE, "\tpushl\t%s\n", rnames[top_rstack()]);
 
-        if (call_node->right->left->attribute.sval->type.super_type == INTEGER) {
-            fprintf(OUTFILE, "\tpushl\t$.LC0\n");
-        }
-        else if (call_node->right->left->attribute.sval->type.super_type == REAL) {
-            fprintf(OUTFILE, "\tpushl\t$.LC1\n");
-        }
-    }
-    else {
-        if (call_node->right->type == INUM) {
-            fprintf(OUTFILE, "\tpushl\t$%d\n", call_node->right->attribute.ival);
-            fprintf(OUTFILE, "\tpushl\t$.LC0\n");
-        }
-        if (call_node->right->type == RNUM) {
-            fprintf(OUTFILE, "\tpushl\t$%f\n", call_node->right->attribute.rval);
-            fprintf(OUTFILE, "\tpushl\t$.LC1\n");
-        }
-    }
+    if (type == INTEGER) fprintf(OUTFILE, "\tpushl\t$.LC0\n");
+    if (type == REAL) fprintf(OUTFILE, "\tpushl\t$.LC1\n");
 
     fprintf(OUTFILE, "\tcall\tprintf\n");
     fprintf(OUTFILE, "\taddl\t$8, %%esp\n");
@@ -200,7 +193,7 @@ void handle_read_call(tree_t *call_node){
         }
     }
     else {
-        fprintf(stderr, "CALLING WRITE ON CONSTANT\n");
+        fprintf(stderr, "CALLING READ ON CONSTANT\n");
     }
 
     fprintf(OUTFILE, "\tcall\tscanf\n");
@@ -430,6 +423,7 @@ void gen_function_call(tree_t *call_node){
 }
 
 void gen_mulop(tree_t *node, int case_num, int R, char *return_loc) {
+    /* SHOULD REALLY FIX THIS FUNCTION AND MAKE IT RECURSIVE */
     /* mul R --> eax = eax*R */
     /* result is in EDX:EAX. */
     /* div R --> eax = eax/R */
@@ -760,7 +754,7 @@ void gen_expr(tree_t *node, int left){
 
         push_rstack(R);
     }
-    /* Case 4, ignoring this for now */
+    /* Case 4 */
     else {
         int T = -1;
         int R = -1;

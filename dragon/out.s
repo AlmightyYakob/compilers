@@ -8,46 +8,6 @@
 	.text
 	.globl	main
 	.type	main, @function
-foo:
-	pushl	%ebp
-	movl	%esp, %ebp
-	subl	$20, %esp
-	movl	%ecx, -4(%ebp)
-	movl	%ebp, %ecx
-	movl	8(%ecx), %eax
-	movl	%eax, -16(%ecx)
-	movl	%ebp, %ecx
-	movl	-16(%ecx), %edi
-	movl	$1, %esi
-	cmp		%esi, %edi
-	jle	.LC3
-	movl	%ebp, %ecx
-	movl	-16(%ecx), %edi
-	subl	$1, %edi
-	pushl	%edi
-	movl	-4(%ebp), %ecx
-	call	foo
-	addl	$4, %esp
-	movl	%ebp, %ecx
-	movl	-4(%ecx), %ecx
-	movl	-72(%ecx), %edi
-	movl	%ebp, %ecx
-	movl	-16(%ecx), %eax
-	mul		%edi
-	movl	%eax, %edi
-	movl	%ebp, %ecx
-	movl	-4(%ecx), %ecx
-	movl	%edi, -72(%ecx)
-	jmp	.LC4
-.LC3:
-	movl	$1, %edi
-	movl	%ebp, %ecx
-	movl	-4(%ecx), %ecx
-	movl	%edi, -72(%ecx)
-.LC4:
-	addl	$20, %esp
-	popl	%ebp
-	ret
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
@@ -68,8 +28,8 @@ boo:
 	movl	$1, %edi
 	movl	%ebp, %ecx
 	movl	%edi, -28(%ecx)
-	jmp	.LC5
-.LC6:
+	jmp	.LC3
+.LC4:
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %edi
 	movl	%ebp, %ecx
@@ -77,78 +37,20 @@ boo:
 	subl	$1, %esi
 	movl	$4, %eax
 	mul		%esi
-	addl	$32, %eax
+	addl	$36, %eax
 	movl	%ebp, %ecx
 	subl	%eax, %ecx
 	movl	%edi, (%ecx)
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %edi
-	addl	$1, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -28(%ecx)
-.LC5:
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	movl	%ebp, %ecx
-	movl	-24(%ecx), %esi
-	cmp		%esi, %edi
-	jle	.LC6
-	movl	$1, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -28(%ecx)
-	jmp	.LC7
-.LC8:
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
 	subl	$1, %edi
 	movl	$4, %eax
 	mul		%edi
-	addl	$32, %eax
+	addl	$36, %eax
 	movl	%ebp, %ecx
 	subl	%eax, %ecx
 	movl	(%ecx), %edi
-	addl	$1, %edi
 	pushl	%edi
-	movl	%ebp, %ecx
-	call	foo
-	addl	$4, %esp
-	movl	%ebp, %ecx
-	movl	-72(%ecx), %edi
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %esi
-	subl	$1, %esi
-	movl	$4, %eax
-	mul		%esi
-	addl	$32, %eax
-	movl	%ebp, %ecx
-	subl	%eax, %ecx
-	movl	%edi, (%ecx)
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	addl	$1, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -28(%ecx)
-.LC7:
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	movl	%ebp, %ecx
-	movl	-24(%ecx), %esi
-	cmp		%esi, %edi
-	jle	.LC8
-	movl	$1, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -28(%ecx)
-	jmp	.LC9
-.LC10:
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	subl	$1, %edi
-	movl	$4, %eax
-	mul		%edi
-	addl	$32, %eax
-	movl	%ebp, %ecx
-	subl	%eax, %ecx
-	pushl	(%ecx)
 	pushl	$.LC0
 	call	printf
 	addl	$8, %esp
@@ -157,13 +59,19 @@ boo:
 	addl	$1, %edi
 	movl	%ebp, %ecx
 	movl	%edi, -28(%ecx)
-.LC9:
+.LC3:
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %edi
 	movl	%ebp, %ecx
 	movl	-24(%ecx), %esi
 	cmp		%esi, %edi
-	jle	.LC10
+	jl	.LC4
+	movl	%ebp, %ecx
+	movl	-24(%ecx), %edi
+	pushl	%edi
+	pushl	$.LC0
+	call	printf
+	addl	$8, %esp
 	addl	$80, %esp
 	popl	%ebp
 	ret
