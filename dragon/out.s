@@ -74,6 +74,7 @@ boo:
 	movl	-28(%ecx), %edi
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %esi
+	subl	$1, %esi
 	movl	$4, %eax
 	mul		%esi
 	addl	$32, %eax
@@ -99,12 +100,13 @@ boo:
 .LC8:
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %edi
+	subl	$1, %edi
 	movl	$4, %eax
 	mul		%edi
 	addl	$32, %eax
 	movl	%ebp, %ecx
 	subl	%eax, %ecx
-	movl	%ecx, %edi
+	movl	(%ecx), %edi
 	addl	$1, %edi
 	pushl	%edi
 	movl	%ebp, %ecx
@@ -114,6 +116,7 @@ boo:
 	movl	-72(%ecx), %edi
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %esi
+	subl	$1, %esi
 	movl	$4, %eax
 	mul		%esi
 	addl	$32, %eax
@@ -139,6 +142,7 @@ boo:
 .LC10:
 	movl	%ebp, %ecx
 	movl	-28(%ecx), %edi
+	subl	$1, %edi
 	movl	$4, %eax
 	mul		%edi
 	addl	$32, %eax

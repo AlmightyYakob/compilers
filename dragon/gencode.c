@@ -119,15 +119,18 @@ int get_byte_offset(tree_t *id_node){
 void gen_array_access(tree_t *access_node) {
     gen_expr(access_node->right, 1);
     
-    /* Top of stack now contains index, R contains expression to assign to ID[index] */
-    /* Multiply index by 4 */
+    /* Top of stack now contains index */
+    /* Need to subtract lower bound to get actual index of array */
+    fprintf(OUTFILE, "\tsubl\t$%d, %s\n", access_node->left->attribute.sval->array_lower_bound, rnames[top_rstack()]);
+
+    /* Multiply index by VAR_SIZE */
     fprintf(OUTFILE, "\tmovl\t$%d, %%eax\n", VAR_SIZE);
     fprintf(OUTFILE, "\tmul\t\t%s\n", rnames[top_rstack()]);
 
     /* Add offset from first element of array and index offset */
     fprintf(OUTFILE, "\taddl\t$%d, %%eax\n", get_byte_offset(access_node->left));
 
-    /* EAX now contains offset from base pointer, to element in array */
+    /* EAX now contains byte offset from base pointer, to element in array */
     gen_nonlocal_lookup(access_node->left);
     fprintf(OUTFILE, "\tsubl\t%%eax, %%ecx\n");
 }
@@ -677,10 +680,8 @@ void gen_expr(tree_t *node, int left){
         return;
     }
     else if (node->type == ARRAY_ACCESS) {
-        /* Add in */
-        fprintf(stderr, "ASDASDASDASD________))))AQ#$(!#($&*\n");
         gen_array_access(node);
-        fprintf(OUTFILE, "\tmovl\t%%ecx, %s\n", rnames[top_rstack()]);
+        fprintf(OUTFILE, "\tmovl\t(%%ecx), %s\n", rnames[top_rstack()]);
         return;
     }
 

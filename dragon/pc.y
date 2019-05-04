@@ -161,7 +161,6 @@ sub_declarations:
         }
     }
     | identifier_list ':' type ';' {
-        fprintf(stderr,"SUB DECLARTAIONS 2\n");
         $$ = update_type($1, $3);
 
         if ($3->type == ARRAY) {
@@ -177,7 +176,7 @@ sub_declarations:
 
 type:
     standard_type                                           {$$ = $1; }
-    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = mkarray(mkinum($3), mkinum($5), $8); tree_print($$);}
+    | ARRAY '[' INUM DOTDOT INUM ']' OF standard_type       {$$ = mkarray(mkinum($3), mkinum($5), $8);}
     ;
 
 standard_type:
