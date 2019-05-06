@@ -11,68 +11,18 @@
 boo:
 	pushl	%ebp
 	movl	%esp, %ebp
-	subl	$80, %esp
+	subl	$40, %esp
 	movl	%ecx, -4(%ebp)
+	movl	$1078523331, %edi
 	movl	%ebp, %ecx
-	movl	8(%ecx), %eax
-	movl	%eax, -12(%ecx)
-	movl	%ebp, %ecx
-	movl	12(%ecx), %eax
-	movl	%eax, -12(%ecx)
-	movl	%ebp, %ecx
-	leal	-24(%ecx), %edi
-	pushl	%edi
-	pushl	$.LC2
-	call	scanf
-	addl	$8, %esp
-	movl	$1, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -28(%ecx)
-	jmp	.LC3
-.LC4:
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %esi
-	subl	$1, %esi
-	movl	$4, %eax
-	mul		%esi
-	addl	$36, %eax
-	movl	%ebp, %ecx
-	subl	%eax, %ecx
-	movl	%edi, (%ecx)
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	subl	$1, %edi
-	movl	$4, %eax
-	mul		%edi
-	addl	$36, %eax
-	movl	%ebp, %ecx
-	subl	%eax, %ecx
-	movl	(%ecx), %edi
-	pushl	%edi
-	pushl	$.LC0
-	call	printf
-	addl	$8, %esp
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	addl	$1, %edi
-	movl	%ebp, %ecx
-	movl	%edi, -28(%ecx)
-.LC3:
-	movl	%ebp, %ecx
-	movl	-28(%ecx), %edi
-	movl	%ebp, %ecx
-	movl	-24(%ecx), %esi
-	cmp		%esi, %edi
-	jl	.LC4
+	movl	%edi, -24(%ecx)
 	movl	%ebp, %ecx
 	movl	-24(%ecx), %edi
 	pushl	%edi
-	pushl	$.LC0
+	pushl	$.LC1
 	call	printf
 	addl	$8, %esp
-	addl	$80, %esp
+	addl	$40, %esp
 	popl	%ebp
 	ret
 main:

@@ -136,9 +136,6 @@ void gen_array_access(tree_t *access_node) {
 }
 
 void handle_write_call(tree_t *call_node){
-    /* ------------------------------------------------------------------------------------------------------------------------------------------- */
-    /* REPLACE ALL THESE IFS WITH JUST 1 call to gen_expr */
-    /* Inner ifs for pushing formats need to stay though */
     int type;
 
     switch (call_node->right->type) {
@@ -321,8 +318,10 @@ void gen_prologue(tree_t *func_node, int record_size) {
     // if (func_name != "main") fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
     fprintf(OUTFILE, "\tmovl\t%%ecx, -4(%%ebp)\n");
 
-    /* Copy passed vars into our stack */
-    gen_get_args(func_node->right, 1);
+    if (func_node->type == FUNCTION || func_node->type == PROCEDURE) {
+        /* Copy passed vars into our stack */
+        gen_get_args(func_node->right, 1);
+    }
 }
 
 void gen_epilogue(tree_t *func_node, int record_size) {
@@ -571,7 +570,7 @@ void gen_stmt(tree_t *node){
         
         case ASSIGNOP:
             fprintf(stderr, "GEN_STMT - ASSIGNOP\n");
-            gen_expr(node->right, 1);   
+            gen_expr(node->right, 1);
             if (node->left->type == ARRAY_ACCESS) {
                 /* Save result of gen_expr(right) */
                 int R = pop_rstack();
@@ -692,7 +691,8 @@ void gen_expr(tree_t *node, int left){
             fprintf(OUTFILE, "\tmovl\t$%d, %s\n", node->attribute.ival, rnames[top_rstack()]);
         }
         else if (node->type == RNUM) {
-            fprintf(OUTFILE, "\tmovl\t%f, %s\n", node->attribute.rval, rnames[top_rstack()]);
+            // fprintf(OUTFILE, "\tmovl\t$0x%x, %s\n", *(unsigned *)&node->attribute.rval, rnames[top_rstack()]);
+            fprintf(OUTFILE, "\tmovl\t$%d, %s\n", *(unsigned *)&node->attribute.rval, rnames[top_rstack()]);
         }
     }
     /* Case 1 */
