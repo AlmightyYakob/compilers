@@ -505,19 +505,37 @@ void gen_stmt(tree_t *node){
             fprintf(stderr, "GEN_STMT - IF\n");
             int then_lc = CURR_IDENT++;
             int end_lc  = CURR_IDENT++;
-            
-            /* Gen the expr and first cond. jump */
-            gen_bool_expr(node->left, then_lc);
 
-            /* Else case */
-            gen_stmt(node->right->right);
-            fprintf(OUTFILE, "\tjmp\t.LC%d\n", end_lc);
-            
-            /* Then case */
-            fprintf(OUTFILE, ".LC%d:\n", then_lc);
-            gen_stmt(node->right->left);
+            if (node->right->type == THEN) {
+                /* Gen the expr and first cond. jump */
+                gen_bool_expr(node->left, then_lc);
 
-            fprintf(OUTFILE, ".LC%d:\n", end_lc);
+                /* Else case */
+                gen_stmt(node->right->right);
+                fprintf(OUTFILE, "\tjmp\t.LC%d\n", end_lc);
+                
+                /* Then case */
+                fprintf(OUTFILE, ".LC%d:\n", then_lc);
+                gen_stmt(node->right->left);
+
+                fprintf(OUTFILE, ".LC%d:\n", end_lc);
+            }
+            else {
+                /* Gen the expr and first cond. jump */
+                gen_bool_expr(node->left, then_lc);
+                fprintf(OUTFILE, "\tjmp\t.LC%d\n", end_lc);
+
+                /* Else case */
+                // gen_stmt(node->right->right);
+                // fprintf(OUTFILE, "\tjmp\t.LC%d\n", end_lc);
+                
+                /* Then case */
+                fprintf(OUTFILE, ".LC%d:\n", then_lc);
+                gen_stmt(node->right);
+
+                fprintf(OUTFILE, ".LC%d:\n", end_lc);
+            }
+            
             break;
         
         case FOR: {
