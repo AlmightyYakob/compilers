@@ -2,7 +2,7 @@
 	.text
 	.section	.rodata
 .LC1:
-	.string	"%f\n"
+	.string	"%f, %f\n"
 	.text
 	.globl	main
 	.type	main, @function
@@ -20,14 +20,17 @@ main:
 	flds	.LC0@GOTOFF(%eax)
 	fstps	-12(%ebp)
 	flds	-12(%ebp)
-	subl	$4, %esp
+	flds	-12(%ebp)
+	subl	$12, %esp
+	leal	-8(%esp), %esp
+	fstpl	(%esp)
 	leal	-8(%esp), %esp
 	fstpl	(%esp)
 	leal	.LC1@GOTOFF(%eax), %edx
 	pushl	%edx
 	movl	%eax, %ebx
 	call	printf@PLT
-	addl	$16, %esp
+	addl	$32, %esp
 	movl	$0, %eax
 	leal	-8(%ebp), %esp
 	popl	%ecx
@@ -47,5 +50,5 @@ main:
 __x86.get_pc_thunk.ax:
 	movl	(%esp), %eax
 	ret
-	.ident	"GCC: (Ubuntu 7.3.0-27ubuntu1~18.04) 7.3.0"
+	.ident	"GCC: (Ubuntu 8.3.0-6ubuntu1) 8.3.0"
 	.section	.note.GNU-stack,"",@progbits

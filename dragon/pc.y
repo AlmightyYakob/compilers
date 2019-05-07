@@ -244,6 +244,9 @@ subprogram_head:
             }
             
             node_t *func_id = scope_insert(top_scope, $2);
+            /* Should maybe add this to scope_insert */
+            func_id->type.tree_node_type = FUNCTION;
+            
             fprintf(stderr, "-----------PUSH--------\n");
             top_scope = push_scope(top_scope);
     } arguments ':' maybe_result standard_type ';' { 
@@ -251,7 +254,7 @@ subprogram_head:
 
             node_t *func_id_node = scope_search_all(top_scope, $2);
             add_args_to_func(func_id_node, $4);
-
+            
             $$ = mktree(FUNCTION, update_type(mkid(func_id_node), $7), $4);
     }
     | PROCEDURE ID {
@@ -259,14 +262,17 @@ subprogram_head:
             yyerror("Procedure ID defined twice");
         }
         node_t *proc_id = scope_insert(top_scope, $2);
+        /* Should maybe add this to scope_insert */
+        proc_id->type.tree_node_type = PROCEDURE;
+
         fprintf(stderr, "-----------PUSH--------\n");
         top_scope = push_scope(top_scope);
     } arguments ';' {
 
         node_t *proc_id_node = scope_search_all(top_scope, $2);
         add_args_to_func(proc_id_node, $4);
+        
         $$ = mktree(PROCEDURE, mkid(proc_id_node), $4);
-
         if (proc_id_node == BUILTIN_WRITE) {
             gen_write_format();
         }
@@ -376,8 +382,6 @@ unmatched_statement:
         }
     ;
 
-/* ------------------below here should use mkid(symtab_search) for IDs? */
-
 variable:
       ID
         {
@@ -468,8 +472,9 @@ factor:
             
             /* Check that ID is a function, not a procedure */
             /* Checking that type is -1 isn't exactly correct */
-            if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type.super_type == -1){
-                yyerror("Procedure used as factor in expression (procedures can't return values)");
+            // if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type.super_type == -1){
+            if (scope_search_all(top_scope, $1) != NULL && scope_search_all(top_scope, $1)->type.tree_node_type != FUNCTION){
+                yyerror("Procedure (or non-function var) used as factor in expression");
             }
 
             /* Verify that parameters are correct in order and type */

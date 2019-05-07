@@ -3,5 +3,5 @@
 
 int main(){
     float x = 3.14;
-    printf("%f\n", x);
+    printf("%f, %f\n", x, x);
 }

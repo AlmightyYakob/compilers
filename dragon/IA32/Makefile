@@ -8,7 +8,7 @@ any:
 	$(CC) $(OPTFLAGS) *.c $(CFLAGS)
 
 assemble: main.s
-	$(CC) $(OPTFLAGS) main.s -o main
+	$(CC) $(OPTFLAGS) -g main.s -o main
 
 main.s: main.c
 	$(CC) $(OPTFLAGS) main.c $(CFLAGS)
