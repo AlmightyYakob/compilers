@@ -153,11 +153,11 @@ sub_declarations:
         
         if ($4->type == ARRAY) {
             int size = $4->left->right->attribute.ival - $4->left->left->attribute.ival + 1;
-            fprintf(stderr, "------ARRAY----\n");
-            fprintf(stderr, "Size: %d\n", size);
-            fprintf(stderr, "Offset before: %d\n", top_scope->curr_offset);
+            // fprintf(stderr, "------ARRAY----\n");
+            // fprintf(stderr, "Size: %d\n", size);
+            // fprintf(stderr, "Offset before: %d\n", top_scope->curr_offset);
             top_scope->curr_offset = fix_offset_for_array($2, size);
-            fprintf(stderr, "Offset after: %d\n", top_scope->curr_offset);
+            // fprintf(stderr, "Offset after: %d\n", top_scope->curr_offset);
         }
     }
     | identifier_list ':' type ';' {
@@ -165,11 +165,11 @@ sub_declarations:
 
         if ($3->type == ARRAY) {
             int size = $3->left->right->attribute.ival - $3->left->left->attribute.ival + 1;
-            fprintf(stderr, "------ARRAY----\n");
-            fprintf(stderr, "Size: %d\n", size);
-            fprintf(stderr, "Offset before: %d\n", top_scope->curr_offset);
+            // fprintf(stderr, "------ARRAY----\n");
+            // fprintf(stderr, "Size: %d\n", size);
+            // fprintf(stderr, "Offset before: %d\n", top_scope->curr_offset);
             top_scope->curr_offset = fix_offset_for_array($1, size);
-            fprintf(stderr, "Offset after: %d\n", top_scope->curr_offset);
+            // fprintf(stderr, "Offset after: %d\n", top_scope->curr_offset);
         }
     }
     ;
