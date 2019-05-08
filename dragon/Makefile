@@ -40,7 +40,7 @@ assemble: out.s
 	$(CC) $(FLAGS) $(OPTFLAGS) out.s -o $(A_OUT)
 
 test: tests/test_scope.c
-	$(CC) $(FLAGS) tests/test_scope.c node.c scope.c   
+	$(CC) $(FLAGS) tests/test_scope.c node.c scope.c
 
 clean:
-	rm -f mypc *.o y.tab.* lex.yy.* *.output *.out
+	rm -f mypc *.o y.tab.* lex.yy.* *.output *.out out.s
