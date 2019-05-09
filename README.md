@@ -17,6 +17,15 @@ sudo apt install bison flex
 sudo apt install gcc-multilib
 ```
 
+### How to use
+* ```make``` (default) compiles the compiler into an executable called mypc
+* Input files are given to the executable through input redirection
+* The assembly output is placed in out.s
+* ```make assemble``` assembles out.s into an executable called COMPILED
+* ```make clean``` cleans the working directory of created files (except COMPILED)
+
+
+
 ### What's working
 
 #### Front-End
@@ -24,8 +33,8 @@ sudo apt install gcc-multilib
 * Two Styles of Comments
 * Unlimited nesting of subprograms
 * Array access on both sides of assignment
-* Allow for statements
-* Another loop construct (while)
+* For loops
+* While loops
 * Visual Syntax Tree Printing
 * Semantic Analysis
 * Error Reporting
