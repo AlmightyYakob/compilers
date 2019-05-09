@@ -18,11 +18,14 @@ sudo apt install gcc-multilib
 ```
 
 ### How to use
-* ```make``` (default) compiles the compiler into an executable called mypc
+* ```make``` (default) compiles the compiler into an executable called ```mypc```
 * Input files are given to the executable through input redirection
-* The assembly output is placed in out.s
-* ```make assemble``` assembles out.s into an executable called COMPILED
+* The assembly output is placed in ```out.s```
+* ```make assemble``` assembles out.s into an executable called ```COMPILED```
 * ```make clean``` cleans the working directory of created files (except COMPILED)
+
+Example of file input to executable:
+```./mypc < example_file.p```
 
 
 
